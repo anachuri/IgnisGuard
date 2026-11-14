@@ -1,5 +1,5 @@
-import OrbiTagApp from "@/components/OrbiTagApp";
+import IgnisGuard from "@/components/IgnisGuard";
 
 export default function Home() {
-  return <OrbiTagApp />;
+  return <IgnisGuard />;
 }

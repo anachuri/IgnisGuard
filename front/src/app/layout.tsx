@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OrbiTag · Burning Activity Calendar",
+  title: "IgnisGuard · Burning Activity Calendar",
   description:
     "Monitor satelital de actividad de incendios, estacionalidad histórica y predicción de riesgo con NASA FIRMS / VIIRS.",
 };
