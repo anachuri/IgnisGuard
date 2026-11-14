@@ -1,6 +1,7 @@
-﻿# pointHarmonization
 
- # 🌍 OrbiTag: Harmonized Fire Activity & Predictive Risk Calendar
+ # 🌍 FuegoControl: Harmonized Fire Activity & Predictive Risk Calendar
+ 
+﻿# pointHarmonization
 
 > **NASA Space Apps Challenge Submission**  
 > *Transforming 20+ years of fragmented satellite fire data into a unified, predictive, and interactive ecological intelligence platform.*
