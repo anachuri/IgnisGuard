@@ -3,8 +3,8 @@ services:
     image: mysql:8
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: orbitag
-    ports: ["3306:3306"]
+      MYSQL_DATABASE: ignisguard
+    ports: ["3307:3306"]
     volumes:
       - dbdata:/var/lib/mysql
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -15,7 +15,7 @@ services:
   api:
     build: .
     environment:
-      DATABASE_URL: mysql+pymysql://root:root@mysql:3306/orbitag
+      DATABASE_URL: mysql+pymysql://root:root@mysql:3306/ignisguard
     ports: ["8000:8000"]
     depends_on:
       mysql:

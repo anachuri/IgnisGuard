@@ -1,7 +1,7 @@
 
- # 🌍 FuegoControl: Harmonized Fire Activity & Predictive Risk Calendar
+ # 🌍 IgnisGuard: Harmonized Fire Activity & Predictive Risk Calendar
  
-﻿# pointHarmonization
+﻿# ignisguard
 
 > **NASA Space Apps Challenge Submission**  
 > *Transforming 20+ years of fragmented satellite fire data into a unified, predictive, and interactive ecological intelligence platform.*
@@ -14,13 +14,13 @@ Understanding how burning activity is distributed across our planet over time—
 
 Satellites have tracked active fire hotspots for more than two decades, but the record is split across sensors whose data cannot be compared directly (such as MODIS vs. VIIRS). This fragmentation leaves fire managers without a consistent, long-term picture of when and where burning has occurred. 
 
-**Our Solution:** **OrbiTag** bridges this gap by harmonizing historical records into a unified active-fire calendar, leveraging machine learning to predict future fire risks, and auditing post-fire vegetation and biomass recovery in real time.
+**Our Solution:** **IgnisGuard** bridges this gap by harmonizing historical records into a unified active-fire calendar, leveraging machine learning to predict future fire risks, and auditing post-fire vegetation and biomass recovery in real time.
 
 ---
 
 ## 🛰️ Data Sources & Satellites Used
 
-To build a robust 20+ year harmonized time series, OrbiTag integrates multi-sensor satellite architectures and environmental data streams:
+To build a robust 20+ year harmonized time series, IgnisGuard integrates multi-sensor satellite architectures and environmental data streams:
 
 1. **NASA FIRMS (Fire Information for Resource Management System):**
    * **MODIS (Terra & Aqua):** Provides historical records from 2000 onward at a ~1 km spatial resolution, capturing macro-trends and long-term seasonality.

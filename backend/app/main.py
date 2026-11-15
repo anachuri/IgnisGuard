@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import calendar, fires, regions
 
-app = FastAPI(title="OrbiTag API")
+app = FastAPI(title="IgnisGuard API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],

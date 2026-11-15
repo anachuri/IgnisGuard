@@ -9,3 +9,4 @@ pyarrow
 h3
 requests
 pydantic
+python-dotenv

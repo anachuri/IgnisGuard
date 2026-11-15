@@ -1,0 +1,12 @@
+# secrets
+.env
+
+# datos generados por el ETL
+data/
+out/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/

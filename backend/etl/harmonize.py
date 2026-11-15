@@ -1,3 +1,4 @@
+import os
 import h3, pandas as pd, geopandas as gpd, numpy as np
 
 RES = 8
@@ -65,4 +66,5 @@ if __name__ == "__main__":
     agg = assign_region(aggregate(df), "data/regiones.geojson")
     agg = agg.dropna(subset=["region_id"])
     agg["region_id"] = agg["region_id"].astype(int)
+    os.makedirs("out", exist_ok=True)
     agg.to_parquet("out/fire_cell_day.parquet")

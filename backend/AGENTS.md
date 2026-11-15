@@ -1,4 +1,4 @@
-# OrbiTag: conectar el frontend al backend FastAPI
+# IgnisGuard: conectar el frontend al backend FastAPI
 
 Este archivo es contexto para un agente de código. Objetivo: reemplazar los datos mock del frontend por llamadas reales al backend, sin romper la UI existente.
 
@@ -7,7 +7,7 @@ Este archivo es contexto para un agente de código. Objetivo: reemplazar los dat
 NASA Space Apps Challenge Córdoba: **armonización de detecciones de incendios MODIS + VIIRS** en un calendario unificado de 20 años para analizar patrones históricos y anticipar emergencias.
 
 - **Frontend** (`front/`): Next.js 16 + React 19 + Tailwind 4. Hoy es 100% mock: no hay fetch, axios ni rutas `app/api`.
-- **Backend** (`back/`, carpeta `orbitag-back`): FastAPI + MySQL + pandas/GeoPandas/H3. Ya está escrito; el front debe consumirlo.
+- **Backend** (`backend/`): FastAPI + MySQL + pandas/GeoPandas/H3. Ya está escrito; el front debe consumirlo.
 
 ## Reglas
 
@@ -26,7 +26,7 @@ NASA Space Apps Challenge Córdoba: **armonización de detecciones de incendios 
 | `src/lib/locations.ts` | 7 regiones hardcodeadas | `GET /api/regions` |
 | `src/lib/fire-data.ts` (serie 20 años, ~l.42) | Calendario generado con PRNG | `GET /api/calendar` |
 | `src/lib/fire-points.ts` (~l.43) | Focos simulados por hotspot | `GET /api/fires` |
-| `OrbiTagApp.tsx` (~l.129) botón "Generar Puntos de Incendio" | `setTimeout` 1,5 s + 268 puntos simulados | Llamar `GET /api/fires` con región y fecha elegidas |
+| `IgnisGuard.tsx` (~l.129) botón "Generar Puntos de Incendio" | `setTimeout` 1,5 s + 268 puntos simulados | Llamar `GET /api/fires` con región y fecha elegidas |
 | `fire-data.ts` (~l.118) modos historical/live/forecast | Según la fecha | **Se mantiene en el front** |
 | `fire-data.ts` (~l.158) predicción pseudo-XGBoost | Fórmula con ruido | **Dejar el mock por ahora** (el backend no tiene `/forecast` todavía) |
 | `MetricsCard.tsx` | Métricas estáticas | **Dejar el mock por ahora** (no hay `/metrics`) |
