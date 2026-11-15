@@ -4,17 +4,18 @@ import { ChevronDown, MapPin, Search, X } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { useId, useMemo, useState } from "react";
 
-import { LOCATIONS } from "@/lib/locations";
 import type { Location } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface LocationSearchProps {
   value: Location;
+  locations: readonly Location[];
   onChange: (location: Location) => void;
 }
 
 export default function LocationSearch({
   value,
+  locations,
   onChange,
 }: LocationSearchProps) {
   const listboxId = useId();
@@ -25,13 +26,13 @@ export default function LocationSearch({
   const normalizedQuery = query.trim().toLowerCase();
 
   const filtered = useMemo(() => {
-    if (!normalizedQuery) return LOCATIONS;
-    return LOCATIONS.filter((location) =>
+    if (!normalizedQuery) return locations;
+    return locations.filter((location) =>
       `${location.name} ${location.province} ${location.biome}`
         .toLowerCase()
         .includes(normalizedQuery),
     );
-  }, [normalizedQuery]);
+  }, [locations, normalizedQuery]);
 
   const selectLocation = (location: Location) => {
     onChange(location);

@@ -10,20 +10,29 @@ import {
   Satellite,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import GlobeView from "@/components/GlobeView";
 import SidebarDashboard from "@/components/SidebarDashboard";
 import Starfield from "@/components/Starfield";
+import type { OnThisDayRow } from "@/lib/api";
 import {
-  buildFireDataset,
-  buildPrediction,
-  getDateMode,
-  todayIso,
-} from "@/lib/fire-data";
-import { generateFirePoints } from "@/lib/fire-points";
-import { DEFAULT_LOCATION_ID, getLocation } from "@/lib/locations";
+  getCalendar,
+  getFires,
+  getOnThisDay,
+  getRegions,
+  isAbortError,
+  mergeApiRegions,
+  toFireDataset,
+  toFirePoints,
+} from "@/lib/api";
+import { buildPrediction, getDateMode, todayIso } from "@/lib/fire-data";
+import { DEFAULT_LOCATION_ID, LOCATIONS } from "@/lib/locations";
+import type { FireDataset, FirePoint, LoadStatus, Location } from "@/lib/types";
 import { cn, formatNumber } from "@/lib/utils";
+
+const CALENDAR_YEARS = 20;
+const API_DEBOUNCE_MS = 220;
 
 function MissionClock() {
   const [time, setTime] = useState<string | null>(null);
@@ -92,39 +101,248 @@ export default function OrbiTagApp() {
 }
 
 function OrbiTagDashboard({ today }: { today: string }) {
+  const [locations, setLocations] = useState<readonly Location[]>(LOCATIONS);
   const [locationId, setLocationId] = useState(DEFAULT_LOCATION_ID);
+  const [regionsStatus, setRegionsStatus] = useState<LoadStatus>("loading");
+  const [regionsError, setRegionsError] = useState<string | null>(null);
+  const [regionsAttempt, setRegionsAttempt] = useState(0);
+
   const [date, setDate] = useState(today);
+  const [apiDate, setApiDate] = useState(today);
   const [sidebarOpen, setSidebarOpen] = useState(
     () => window.matchMedia("(min-width: 768px)").matches,
   );
-  const [firesEnabled, setFiresEnabled] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
 
-  const location = getLocation(locationId);
+  const [dataset, setDataset] = useState<FireDataset | null>(null);
+  const [calendarStatus, setCalendarStatus] = useState<LoadStatus>("idle");
+  const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [calendarAttempt, setCalendarAttempt] = useState(0);
+
+  const [onThisDayRows, setOnThisDayRows] = useState<OnThisDayRow[]>([]);
+  const [onThisDayStatus, setOnThisDayStatus] = useState<LoadStatus>("idle");
+  const [onThisDayError, setOnThisDayError] = useState<string | null>(null);
+  const [onThisDayAttempt, setOnThisDayAttempt] = useState(0);
+
+  const [firesEnabled, setFiresEnabled] = useState(false);
+  const [firesStatus, setFiresStatus] = useState<LoadStatus>("idle");
+  const [firesError, setFiresError] = useState<string | null>(null);
+  const [firesAttempt, setFiresAttempt] = useState(0);
+  const [firePoints, setFirePoints] = useState<FirePoint[]>([]);
+
+  const calendarToYear = Number(today.slice(0, 4));
+  const calendarFromYear = calendarToYear - (CALENDAR_YEARS - 1);
+  const location =
+    locations.find((item) => item.id === locationId) ??
+    locations[0] ??
+    LOCATIONS[0];
   const mode = getDateMode(date, today);
-  const dataset = useMemo(
-    () => buildFireDataset(location, today),
-    [location, today],
-  );
-  const firePoints = useMemo(() => generateFirePoints(location), [location]);
+  const apiMode = getDateMode(apiDate, today);
+  const generating = firesStatus === "loading";
+
   const prediction = useMemo(
     () => (mode === "forecast" ? buildPrediction(location, date, today) : null),
     [date, location, mode, today],
   );
 
   const maxFrp = useMemo(
-    () => Math.max(...firePoints.map((point) => point.frp)),
+    () =>
+      firePoints.length ? Math.max(...firePoints.map((point) => point.frp)) : 0,
     [firePoints],
   );
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+    const timer = window.setTimeout(() => setApiDate(date), API_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [date]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: regionsAttempt fuerza el reintento manual
+  useEffect(() => {
+    const controller = new AbortController();
+    setRegionsStatus("loading");
+    setRegionsError(null);
+
+    getRegions(controller.signal)
+      .then((regions) => {
+        if (regions.length === 0) {
+          setLocations(LOCATIONS);
+          setRegionsStatus("error");
+          setRegionsError(
+            "El backend no tiene regiones cargadas. Usando la lista local hasta que /api/regions devuelva datos.",
+          );
+          return;
+        }
+
+        setLocations(mergeApiRegions(regions));
+        setRegionsStatus("success");
+      })
+      .catch((error: unknown) => {
+        if (isAbortError(error)) return;
+        setLocations(LOCATIONS);
+        setRegionsStatus("error");
+        setRegionsError(
+          "No se pudo conectar con /api/regions. Revisá NEXT_PUBLIC_API_URL o levantá FastAPI.",
+        );
+      });
+
+    return () => controller.abort();
+  }, [regionsAttempt]);
+
+  useEffect(() => {
+    if (locations.length === 0) return;
+    if (!locations.some((item) => item.id === locationId)) {
+      setLocationId(locations[0].id);
+    }
+  }, [locationId, locations]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: calendarAttempt fuerza el reintento manual
+  useEffect(() => {
+    if (regionsStatus === "loading") {
+      setCalendarStatus("loading");
+      return;
+    }
+
+    if (regionsStatus === "error" || !location.apiId) {
+      setDataset(null);
+      setCalendarStatus("error");
+      setCalendarError(
+        regionsError ?? "La región seleccionada no tiene id de FastAPI.",
+      );
+      return;
+    }
+
+    const controller = new AbortController();
+    setCalendarStatus("loading");
+    setCalendarError(null);
+
+    getCalendar(
+      location.apiId,
+      calendarFromYear,
+      calendarToYear,
+      controller.signal,
+    )
+      .then((rows) => {
+        setDataset(toFireDataset(rows, calendarFromYear, calendarToYear));
+        setCalendarStatus("success");
+      })
+      .catch((error: unknown) => {
+        if (isAbortError(error)) return;
+        setDataset(null);
+        setCalendarStatus("error");
+        setCalendarError(
+          "No se pudo cargar /api/calendar para esta región. Reintentá cuando el backend esté en línea.",
+        );
+      });
+
+    return () => controller.abort();
+  }, [
+    calendarAttempt,
+    calendarFromYear,
+    calendarToYear,
+    location.apiId,
+    regionsError,
+    regionsStatus,
+  ]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: onThisDayAttempt fuerza el reintento manual
+  useEffect(() => {
+    if (regionsStatus === "loading") {
+      setOnThisDayStatus("loading");
+      return;
+    }
+
+    if (regionsStatus === "error" || !location.apiId) {
+      setOnThisDayRows([]);
+      setOnThisDayStatus("error");
+      setOnThisDayError(
+        regionsError ?? "La región seleccionada no tiene id de FastAPI.",
+      );
+      return;
+    }
+
+    const controller = new AbortController();
+    const month = Number(apiDate.slice(5, 7));
+    const day = Number(apiDate.slice(8, 10));
+    setOnThisDayStatus("loading");
+    setOnThisDayError(null);
+
+    getOnThisDay(location.apiId, month, day, controller.signal)
+      .then((rows) => {
+        setOnThisDayRows(rows);
+        setOnThisDayStatus("success");
+      })
+      .catch((error: unknown) => {
+        if (isAbortError(error)) return;
+        setOnThisDayRows([]);
+        setOnThisDayStatus("error");
+        setOnThisDayError(
+          "No se pudo cargar /api/on-this-day para esta fecha.",
+        );
+      });
+
+    return () => controller.abort();
+  }, [apiDate, location.apiId, onThisDayAttempt, regionsError, regionsStatus]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: firesAttempt fuerza el reintento manual
+  useEffect(() => {
+    if (!firesEnabled) {
+      setFiresStatus("idle");
+      setFiresError(null);
+      setFirePoints([]);
+      return;
+    }
+
+    if (apiMode === "forecast") {
+      setFirePoints([]);
+      setFiresStatus("error");
+      setFiresError(
+        "No hay detecciones para fechas futuras. Elegí una fecha histórica o de hoy.",
+      );
+      return;
+    }
+
+    if (regionsStatus === "loading") {
+      setFiresStatus("loading");
+      return;
+    }
+
+    if (regionsStatus === "error" || !location.apiId) {
+      setFirePoints([]);
+      setFiresStatus("error");
+      setFiresError(
+        regionsError ?? "La región seleccionada no tiene id de FastAPI.",
+      );
+      return;
+    }
+
+    const controller = new AbortController();
+    setFiresStatus("loading");
+    setFiresError(null);
+    setFirePoints([]);
+
+    getFires(location.apiId, apiDate, controller.signal)
+      .then((response) => {
+        setFirePoints(toFirePoints(response));
+        setFiresStatus("success");
+      })
+      .catch((error: unknown) => {
+        if (isAbortError(error)) return;
+        setFirePoints([]);
+        setFiresStatus("error");
+        setFiresError(
+          "No se pudo consultar /api/fires. Verificá que FastAPI esté en línea.",
+        );
+      });
+
+    return () => controller.abort();
+  }, [
+    apiDate,
+    apiMode,
+    firesAttempt,
+    firesEnabled,
+    location.apiId,
+    regionsError,
+    regionsStatus,
+  ]);
 
   const handleGenerate = () => {
     if (generating) return;
@@ -134,13 +352,18 @@ function OrbiTagDashboard({ today }: { today: string }) {
       return;
     }
 
-    setGenerating(true);
-    timeoutRef.current = window.setTimeout(() => {
-      setGenerating(false);
-      setFiresEnabled(true);
-      timeoutRef.current = null;
-    }, 1500);
+    if (mode === "forecast") {
+      setFiresStatus("error");
+      setFiresError(
+        "No hay detecciones para fechas futuras. Elegí una fecha histórica o de hoy.",
+      );
+      return;
+    }
+
+    setFiresEnabled(true);
   };
+
+  const retryFires = () => setFiresAttempt((attempt) => attempt + 1);
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-[#030712] text-slate-100">
@@ -169,7 +392,7 @@ function OrbiTagDashboard({ today }: { today: string }) {
           location={location}
           firePoints={firePoints}
           showFires={firesEnabled}
-          generating={generating}
+          generating={firesStatus === "loading"}
         />
 
         <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-4 sm:p-5">
@@ -229,9 +452,11 @@ function OrbiTagDashboard({ today }: { today: string }) {
               <span
                 className={cn(
                   "ml-auto h-1.5 w-1.5 rounded-full",
-                  firesEnabled
-                    ? "bg-emerald-400 shadow-[0_0_7px_2px_rgba(52,211,153,0.55)]"
-                    : "bg-slate-600",
+                  firesStatus === "error"
+                    ? "bg-red-400 shadow-[0_0_7px_2px_rgba(248,113,113,0.55)]"
+                    : firesEnabled
+                      ? "bg-emerald-400 shadow-[0_0_7px_2px_rgba(52,211,153,0.55)]"
+                      : "bg-slate-600",
                 )}
               />
             </div>
@@ -246,7 +471,13 @@ function OrbiTagDashboard({ today }: { today: string }) {
                 FRP crítico
               </span>
               <span className="ml-auto font-mono text-[7px] tabular-nums text-slate-600">
-                {firesEnabled ? `${firePoints.length} focos` : "sin datos"}
+                {firesStatus === "loading"
+                  ? "consultando"
+                  : firesStatus === "error"
+                    ? "error"
+                    : firesEnabled
+                      ? `${firePoints.length} focos`
+                      : "sin datos"}
               </span>
             </div>
 
@@ -268,11 +499,26 @@ function OrbiTagDashboard({ today }: { today: string }) {
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-300" />
               Consultando FIRMS · pasada orbital
             </div>
+          ) : firesError ? (
+            <div className="flex items-center gap-2 rounded-full border border-red-400/25 bg-slate-950/80 px-3 py-1 font-mono text-[7.5px] uppercase tracking-[0.14em] text-red-200/85 backdrop-blur-md">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+              <span className="max-w-[70vw] truncate">{firesError}</span>
+              {firesEnabled && mode !== "forecast" ? (
+                <button
+                  type="button"
+                  onClick={retryFires}
+                  className="pointer-events-auto ml-1 rounded border border-red-300/30 px-1.5 py-0.5 text-[7px] tracking-[0.1em] text-red-100/90 transition hover:bg-red-400/10"
+                >
+                  Reintentar
+                </button>
+              ) : null}
+            </div>
           ) : firesEnabled ? (
             <div className="flex items-center gap-2 rounded-full border border-orange-400/20 bg-slate-950/75 px-3 py-1 font-mono text-[7.5px] uppercase tracking-[0.14em] text-orange-200/80 backdrop-blur-md">
               <span className="h-1.5 w-1.5 rounded-full bg-orange-400 shadow-[0_0_7px_2px_rgba(251,146,60,0.6)]" />
-              {formatNumber(firePoints.length)} focos · FRP máx.{" "}
-              {Math.round(maxFrp)} MW
+              {firePoints.length > 0
+                ? `${formatNumber(firePoints.length)} focos · FRP máx. ${Math.round(maxFrp)} MW`
+                : "Sin detecciones para esta fecha"}
             </div>
           ) : (
             <div className="flex items-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.14em] text-slate-600">
@@ -334,6 +580,7 @@ function OrbiTagDashboard({ today }: { today: string }) {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         location={location}
+        locations={locations}
         onLocationChange={(nextLocation) => setLocationId(nextLocation.id)}
         date={date}
         onDateChange={setDate}
@@ -341,6 +588,15 @@ function OrbiTagDashboard({ today }: { today: string }) {
         mode={mode}
         prediction={prediction}
         dataset={dataset}
+        calendarStatus={calendarStatus}
+        calendarError={calendarError}
+        onRetryCalendar={() => setCalendarAttempt((attempt) => attempt + 1)}
+        regionsError={regionsError}
+        onRetryRegions={() => setRegionsAttempt((attempt) => attempt + 1)}
+        onThisDayRows={onThisDayRows}
+        onThisDayStatus={onThisDayStatus}
+        onThisDayError={onThisDayError}
+        onRetryOnThisDay={() => setOnThisDayAttempt((attempt) => attempt + 1)}
       />
 
       {!sidebarOpen ? (

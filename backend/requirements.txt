@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pymysql
+cryptography
+pandas
+geopandas
+pyarrow
+h3
+requests
+pydantic

@@ -5,7 +5,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const geo = JSON.parse(readFileSync(resolve(__dirname, "land.geojson"), "utf8"));
+const geo = JSON.parse(
+  readFileSync(resolve(__dirname, "land.geojson"), "utf8"),
+);
 
 /** @typedef {[number, number]} Point */
 /** @type {{bbox: [number, number, number, number], rings: Point[][]}[]} */
@@ -17,9 +19,7 @@ for (const feature of geo.features) {
     geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
 
   for (const polygon of coordinates) {
-    const rings = polygon.map((ring) =>
-      ring.map(([lon, lat]) => [lon, lat]),
-    );
+    const rings = polygon.map((ring) => ring.map(([lon, lat]) => [lon, lat]));
     let minLon = 180;
     let minLat = 90;
     let maxLon = -180;
@@ -91,4 +91,6 @@ export const LAND_POINTS: ReadonlyArray<readonly [number, number]> = ${JSON.stri
 `;
 
 writeFileSync(resolve(__dirname, "../src/lib/land-points.ts"), output);
-console.log(`Generated ${points.length} land points (${(output.length / 1024).toFixed(1)} KB)`);
+console.log(
+  `Generated ${points.length} land points (${(output.length / 1024).toFixed(1)} KB)`,
+);

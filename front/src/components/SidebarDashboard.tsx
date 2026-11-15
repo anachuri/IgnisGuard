@@ -3,36 +3,104 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  AlertTriangle,
   CalendarDays,
   CalendarRange,
   Crosshair,
   History,
+  Loader2,
   MapPinned,
   Orbit,
   PanelRightClose,
   Radio,
+  RotateCw,
   Satellite,
 } from "lucide-react";
 
 import FireCalendar from "@/components/FireCalendar";
 import LocationSearch from "@/components/LocationSearch";
 import MetricsCard from "@/components/MetricsCard";
+import OnThisDayPanel from "@/components/OnThisDayPanel";
 import PredictionCard from "@/components/PredictionCard";
+import type { OnThisDayRow } from "@/lib/api";
 import { addDaysIso } from "@/lib/fire-data";
-import type { DateMode, FireDataset, Location, Prediction } from "@/lib/types";
+import type {
+  DateMode,
+  FireDataset,
+  LoadStatus,
+  Location,
+  Prediction,
+} from "@/lib/types";
 import { cn, formatIsoDate, weekdayFromIso } from "@/lib/utils";
 
 interface SidebarDashboardProps {
   open: boolean;
   onClose: () => void;
   location: Location;
+  locations: readonly Location[];
   onLocationChange: (location: Location) => void;
   date: string;
   onDateChange: (date: string) => void;
   today: string;
   mode: DateMode;
   prediction: Prediction | null;
-  dataset: FireDataset;
+  dataset: FireDataset | null;
+  calendarStatus: LoadStatus;
+  calendarError: string | null;
+  onRetryCalendar: () => void;
+  regionsError: string | null;
+  onRetryRegions: () => void;
+  onThisDayRows: OnThisDayRow[];
+  onThisDayStatus: LoadStatus;
+  onThisDayError: string | null;
+  onRetryOnThisDay: () => void;
+}
+
+function LoadError({
+  message,
+  onRetry,
+}: {
+  message: string | null;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-red-400/20 bg-red-500/[0.06] p-3.5">
+      <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-red-200/90">
+        <AlertTriangle className="h-3 w-3" />
+        Backend no disponible
+      </div>
+      <p className="mt-1.5 text-[9px] leading-relaxed text-slate-400">
+        {message ?? "No se pudo obtener la respuesta del servidor."}
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-2 inline-flex items-center gap-1 rounded-md border border-red-400/25 bg-red-500/10 px-2 py-1 font-mono text-[7px] uppercase tracking-[0.12em] text-red-200/80 transition hover:border-red-300/40 hover:text-red-100"
+      >
+        <RotateCw className="h-2.5 w-2.5" />
+        Reintentar
+      </button>
+    </div>
+  );
+}
+
+function CalendarSkeleton() {
+  return (
+    <div className="rounded-xl border border-white/10 bg-slate-950/45 p-3.5">
+      <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">
+        <Loader2 className="h-3 w-3 animate-spin text-cyan-300/70" />
+        Cargando calendario histórico
+      </div>
+      <div className="mt-3 grid grid-cols-12 gap-[3px]">
+        {CALENDAR_SKELETON_CELLS.map((key) => (
+          <div
+            key={key}
+            className="h-2.5 animate-pulse rounded-[2px] bg-white/[0.06]"
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 interface SectionLabelProps {
@@ -65,10 +133,16 @@ const DATE_PRESETS = [
   { label: "+45 d", days: 45 },
 ];
 
+const CALENDAR_SKELETON_CELLS = Array.from(
+  { length: 72 },
+  (_, index) => `calendar-skeleton-${index}`,
+);
+
 export default function SidebarDashboard({
   open,
   onClose,
   location,
+  locations,
   onLocationChange,
   date,
   onDateChange,
@@ -76,6 +150,15 @@ export default function SidebarDashboard({
   mode,
   prediction,
   dataset,
+  calendarStatus,
+  calendarError,
+  onRetryCalendar,
+  regionsError,
+  onRetryRegions,
+  onThisDayRows,
+  onThisDayStatus,
+  onThisDayError,
+  onRetryOnThisDay,
 }: SidebarDashboardProps) {
   const parsedDate = new Date(`${date}T12:00:00Z`);
   const highlightYear = parsedDate.getUTCFullYear();
@@ -149,7 +232,27 @@ export default function SidebarDashboard({
               meta="Input"
             />
 
-            <LocationSearch value={location} onChange={onLocationChange} />
+            <LocationSearch
+              value={location}
+              locations={locations}
+              onChange={onLocationChange}
+            />
+
+            {regionsError ? (
+              <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/[0.05] px-2.5 py-2">
+                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-amber-300/80" />
+                <p className="flex-1 text-[9px] leading-relaxed text-amber-100/70">
+                  {regionsError}
+                </p>
+                <button
+                  type="button"
+                  onClick={onRetryRegions}
+                  className="shrink-0 font-mono text-[7px] uppercase tracking-[0.1em] text-amber-200/80 transition hover:text-amber-100"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : null}
 
             <div className="mt-3">
               <div className="mb-1.5 flex items-center justify-between">
@@ -267,11 +370,36 @@ export default function SidebarDashboard({
               icon={CalendarRange}
               meta="20 años"
             />
-            <FireCalendar
-              dataset={dataset}
+            {calendarStatus === "loading" ? (
+              <CalendarSkeleton />
+            ) : calendarStatus === "error" ? (
+              <LoadError message={calendarError} onRetry={onRetryCalendar} />
+            ) : dataset ? (
+              <FireCalendar
+                dataset={dataset}
+                location={location}
+                highlightYear={highlightYear}
+                highlightMonth={highlightMonth}
+              />
+            ) : null}
+          </section>
+
+          <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <section className="animate-fade-up [animation-delay:140ms]">
+            <SectionLabel
+              index="03"
+              title="Archivo del día"
+              icon={History}
+              meta="MODIS + VIIRS"
+            />
+            <OnThisDayPanel
               location={location}
-              highlightYear={highlightYear}
-              highlightMonth={highlightMonth}
+              date={date}
+              rows={onThisDayRows}
+              status={onThisDayStatus}
+              error={onThisDayError}
+              onRetry={onRetryOnThisDay}
             />
           </section>
 
@@ -279,7 +407,7 @@ export default function SidebarDashboard({
 
           <section className="animate-fade-up [animation-delay:180ms]">
             <SectionLabel
-              index="03"
+              index="04"
               title="Métricas del sector"
               icon={Activity}
               meta="Live"
@@ -289,7 +417,7 @@ export default function SidebarDashboard({
 
           <div className="mt-4 flex items-center justify-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">
             <Crosshair className="h-2.5 w-2.5" />
-            Modelo demostrativo · Datos simulados
+            Calendario y focos FastAPI · Predicción demo
           </div>
         </div>
 

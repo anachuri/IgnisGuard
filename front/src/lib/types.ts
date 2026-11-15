@@ -1,5 +1,7 @@
 export type DateMode = "historical" | "live" | "forecast";
 
+export type LoadStatus = "idle" | "loading" | "success" | "error";
+
 export type RiskLevel = "Bajo" | "Moderado" | "Alto" | "Extremo";
 
 export type DrynessLevel = "Bajo" | "Moderado" | "Alto" | "Crítico";
@@ -8,6 +10,8 @@ export type Severity = "Baja" | "Media" | "Alta" | "Extrema";
 
 export interface Location {
   id: string;
+  /** Id numérico que usa el backend FastAPI. */
+  apiId?: number;
   name: string;
   province: string;
   country: string;
@@ -57,6 +61,8 @@ export interface FirePoint {
   lon: number;
   intensity: number;
   frp: number;
+  /** 1 si MODIS y VIIRS detectaron la misma celda H3. */
+  agreement?: number;
 }
 
 export interface PredictionDriver {

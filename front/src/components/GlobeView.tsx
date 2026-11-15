@@ -412,7 +412,9 @@ export default function GlobeView({
           if (reveal <= 0) continue;
 
           const flicker = 0.82 + 0.18 * Math.sin(now * 0.0026 + index * 0.91);
-          const glowSize = (11 + fire.intensity * 32) * dotScale * flicker;
+          const agreementBoost = fire.agreement ? 1.3 : 1;
+          const glowSize =
+            (11 + fire.intensity * 32) * dotScale * flicker * agreementBoost;
           const alpha =
             (0.4 + fire.intensity * 0.55) * reveal * (0.4 + point.z * 0.6);
 

@@ -87,7 +87,7 @@ export default function FireCalendar({
             {formatNumber(dataset.totalDetections)}
           </p>
           <p className="font-mono text-[7px] uppercase tracking-[0.14em] text-slate-600">
-            detecciones
+            celdas H3
           </p>
         </div>
       </div>
@@ -137,8 +137,8 @@ export default function FireCalendar({
                   key={`${year}-${MONTHS_LONG[month]}`}
                   type="button"
                   tabIndex={-1}
-                  aria-label={`${MONTHS_LONG[month]} ${year}: ${cell.frp.toFixed(1)} GW, ${formatNumber(cell.detections)} detecciones`}
-                  title={`${MONTHS_LONG[month]} ${year} · ${cell.frp.toFixed(1)} GW`}
+                  aria-label={`${MONTHS_LONG[month]} ${year}: ${cell.frp.toFixed(1)} MW, ${formatNumber(cell.detections)} celdas H3`}
+                  title={`${MONTHS_LONG[month]} ${year} · ${cell.frp.toFixed(1)} MW`}
                   onMouseEnter={(event) => showTooltip(event, cellIndex)}
                   onFocus={(event) => showTooltip(event, cellIndex)}
                   onMouseLeave={() => setTooltip(null)}
@@ -192,10 +192,10 @@ export default function FireCalendar({
             {MONTHS_LONG[tooltip.month]} {tooltip.year}
           </p>
           <p className="mt-1 text-[11px] font-semibold tabular-nums text-orange-300">
-            {tooltip.frp.toFixed(1)} GW
+            {tooltip.frp.toFixed(1)} MW
           </p>
           <p className="text-[9px] tabular-nums text-slate-400">
-            {formatNumber(tooltip.detections)} detecciones
+            {formatNumber(tooltip.detections)} celdas H3
           </p>
         </div>
       ) : null}
