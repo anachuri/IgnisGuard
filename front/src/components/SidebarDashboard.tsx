@@ -1,3 +1,7 @@
+/*
+
+**/
+
 "use client";
 
 import type { LucideIcon } from "lucide-react";
@@ -168,7 +172,7 @@ export default function SidebarDashboard({
     <aside
       inert={!open}
       aria-hidden={!open}
-      aria-label="Panel de análisis OrbiTag"
+      aria-label="Panel de análisis IgnisGuard"
       className={cn(
         "fixed bottom-3 right-3 top-3 z-30 w-[400px] max-w-[calc(100vw-1.5rem)] transition-transform duration-500 ease-out sm:bottom-4 sm:right-4 sm:top-4",
         open ? "translate-x-0" : "translate-x-[calc(100%+1.25rem)]",
@@ -190,7 +194,7 @@ export default function SidebarDashboard({
               </div>
               <div className="min-w-0">
                 <h2 className="truncate text-sm font-semibold tracking-[0.22em] text-white">
-                  ORBITAG
+                  IGNISGUARD
                 </h2>
                 <p className="truncate font-mono text-[7.5px] uppercase tracking-[0.18em] text-slate-500">
                   Panel de análisis · Burning Activity
@@ -427,7 +431,7 @@ export default function SidebarDashboard({
               <Satellite className="h-2.5 w-2.5 text-cyan-400/50" />
               NASA FIRMS · VIIRS 375m
             </span>
-            <span>OrbiTag v1.0</span>
+            <span>IgnisGuard v1.0</span>
           </div>
         </footer>
       </div>

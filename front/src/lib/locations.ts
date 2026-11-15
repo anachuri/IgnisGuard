@@ -2,22 +2,22 @@ import type { Location } from "./types";
 
 export const LOCATIONS: readonly Location[] = [
   {
-    id: "cordoba",
-    name: "Córdoba",
-    province: "Córdoba",
+    id: "jujuy",
+    name: "Jujuy",
+    province: "Jujuy",
     country: "Argentina",
-    lat: -31.4201,
-    lon: -64.1888,
-    biome: "Bosque serrano / Pastizal",
-    frpTotalGw: 1842.7,
-    baselineRisk: 0.56,
-    season: [0.42, 0.34, 0.3, 0.2, 0.16, 0.2, 0.34, 0.72, 1, 0.9, 0.58, 0.46],
-    dryness: { score: 68, level: "Alto", humidity: 14.2, fuelLoad: 74 },
+    lat: -24.1858,
+    lon: -65.2995,
+    biome: "Quebrada / Puna",
+    frpTotalGw: 1672.8,
+    baselineRisk: 0.63,
+    season: [0.18, 0.15, 0.16, 0.14, 0.16, 0.22, 0.36, 0.72, 1, 0.9, 0.55, 0.3],
+    dryness: { score: 79, level: "Alto", humidity: 12.8, fuelLoad: 81 },
     recovery: {
-      percent: 78,
-      severity: "Alta",
-      lastFireYear: 2022,
-      monthsSince: 41,
+      percent: 58,
+      severity: "Extrema",
+      lastFireYear: 2020,
+      monthsSince: 63,
     },
   },
   {
@@ -40,22 +40,22 @@ export const LOCATIONS: readonly Location[] = [
     },
   },
   {
-    id: "jujuy",
-    name: "Jujuy",
-    province: "Jujuy",
+    id: "cordoba",
+    name: "Córdoba",
+    province: "Córdoba",
     country: "Argentina",
-    lat: -24.1858,
-    lon: -65.2995,
-    biome: "Quebrada / Puna",
-    frpTotalGw: 1672.8,
-    baselineRisk: 0.63,
-    season: [0.18, 0.15, 0.16, 0.14, 0.16, 0.22, 0.36, 0.72, 1, 0.9, 0.55, 0.3],
-    dryness: { score: 79, level: "Alto", humidity: 12.8, fuelLoad: 81 },
+    lat: -31.4201,
+    lon: -64.1888,
+    biome: "Bosque serrano / Pastizal",
+    frpTotalGw: 1842.7,
+    baselineRisk: 0.56,
+    season: [0.42, 0.34, 0.3, 0.2, 0.16, 0.2, 0.34, 0.72, 1, 0.9, 0.58, 0.46],
+    dryness: { score: 68, level: "Alto", humidity: 14.2, fuelLoad: 74 },
     recovery: {
-      percent: 58,
-      severity: "Extrema",
-      lastFireYear: 2020,
-      monthsSince: 63,
+      percent: 78,
+      severity: "Alta",
+      lastFireYear: 2022,
+      monthsSince: 41,
     },
   },
   {
@@ -140,7 +140,7 @@ export const LOCATIONS: readonly Location[] = [
   },
 ];
 
-export const DEFAULT_LOCATION_ID = "cordoba";
+export const DEFAULT_LOCATION_ID = "jujuy";
 
 export function getLocation(id: string): Location {
   return LOCATIONS.find((location) => location.id === id) ?? LOCATIONS[0];

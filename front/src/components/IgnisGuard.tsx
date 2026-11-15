@@ -73,7 +73,7 @@ function BootScreen() {
 
         <div className="text-center">
           <p className="text-sm font-semibold tracking-[0.36em] text-white">
-            ORBITAG<span className="text-orange-400">.</span>
+            IGNISGUARD<span className="text-orange-400">.</span>
           </p>
           <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.26em] text-cyan-300/70">
             Inicializando telemetría orbital
@@ -88,7 +88,7 @@ function BootScreen() {
   );
 }
 
-export default function OrbiTagApp() {
+export default function IgnisGuard() {
   const [today, setToday] = useState<string | null>(null);
 
   useEffect(() => {
@@ -97,10 +97,10 @@ export default function OrbiTagApp() {
   }, []);
 
   if (!today) return <BootScreen />;
-  return <OrbiTagDashboard today={today} />;
+  return <IgnisGuardDashboard today={today} />;
 }
 
-function OrbiTagDashboard({ today }: { today: string }) {
+function IgnisGuardDashboard({ today }: { today: string }) {
   const [locations, setLocations] = useState<readonly Location[]>(LOCATIONS);
   const [locationId, setLocationId] = useState(DEFAULT_LOCATION_ID);
   const [regionsStatus, setRegionsStatus] = useState<LoadStatus>("loading");
@@ -404,7 +404,7 @@ function OrbiTagDashboard({ today }: { today: string }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold tracking-[0.3em] text-white">
-                  ORBITAG<span className="text-orange-400">.</span>
+                  IGNISGUARD<span className="text-orange-400">.</span>
                 </span>
                 <span className="hidden rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[6.5px] uppercase tracking-[0.14em] text-slate-400 sm:inline">
                   NASA Space Apps
