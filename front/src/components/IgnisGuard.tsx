@@ -10,19 +10,21 @@ import {
   Satellite,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import GlobeView from "@/components/GlobeView";
 import SidebarDashboard from "@/components/SidebarDashboard";
 import Starfield from "@/components/Starfield";
-import type { OnThisDayRow } from "@/lib/api";
+import type { OnThisDayRow, RefreshStatus } from "@/lib/api";
 import {
   getCalendar,
   getFires,
   getOnThisDay,
+  getRefreshStatus,
   getRegions,
   isAbortError,
   mergeApiRegions,
+  startRefresh,
   toFireDataset,
   toFirePoints,
 } from "@/lib/api";
@@ -128,6 +130,16 @@ function IgnisGuardDashboard({ today }: { today: string }) {
   const [firesError, setFiresError] = useState<string | null>(null);
   const [firesAttempt, setFiresAttempt] = useState(0);
   const [firePoints, setFirePoints] = useState<FirePoint[]>([]);
+
+  const [refresh, setRefresh] = useState<RefreshStatus>({
+    running: false,
+    started_at: null,
+    finished_at: null,
+    ok: null,
+    detail: "",
+    request: null,
+  });
+  const refreshPoll = useRef<number | null>(null);
 
   const calendarToYear = Number(today.slice(0, 4));
   const calendarFromYear = calendarToYear - (CALENDAR_YEARS - 1);
@@ -365,6 +377,60 @@ function IgnisGuardDashboard({ today }: { today: string }) {
 
   const retryFires = () => setFiresAttempt((attempt) => attempt + 1);
 
+  const handleRefreshData = (start: string, end: string) => {
+    if (refresh.running || location.apiId == null) return;
+
+    startRefresh({ region_id: location.apiId, start, end })
+      .then(() =>
+        setRefresh((current) => ({
+          ...current,
+          running: true,
+          detail: "",
+          ok: null,
+        })),
+      )
+      .catch(() =>
+        setRefresh((current) => ({
+          ...current,
+          running: false,
+          ok: false,
+          detail: "No se pudo iniciar el refresh en el backend.",
+        })),
+      );
+  };
+
+  useEffect(() => {
+    if (!refresh.running) return;
+
+    const poll = () => {
+      getRefreshStatus()
+        .then((status) => {
+          setRefresh(status);
+          if (!status.running) {
+            if (refreshPoll.current !== null) {
+              window.clearInterval(refreshPoll.current);
+              refreshPoll.current = null;
+            }
+            if (status.ok) {
+              setCalendarAttempt((attempt) => attempt + 1);
+              setOnThisDayAttempt((attempt) => attempt + 1);
+              setFiresAttempt((attempt) => attempt + 1);
+            }
+          }
+        })
+        .catch(() => {});
+    };
+
+    poll();
+    refreshPoll.current = window.setInterval(poll, 3000);
+    return () => {
+      if (refreshPoll.current !== null) {
+        window.clearInterval(refreshPoll.current);
+        refreshPoll.current = null;
+      }
+    };
+  }, [refresh.running]);
+
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-[#030712] text-slate-100">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -597,6 +663,8 @@ function IgnisGuardDashboard({ today }: { today: string }) {
         onThisDayStatus={onThisDayStatus}
         onThisDayError={onThisDayError}
         onRetryOnThisDay={() => setOnThisDayAttempt((attempt) => attempt + 1)}
+        onRefreshData={handleRefreshData}
+        refresh={refresh}
       />
 
       {!sidebarOpen ? (

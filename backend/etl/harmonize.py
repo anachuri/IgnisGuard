@@ -1,8 +1,11 @@
-import os
+import os, sys
 import h3, pandas as pd, geopandas as gpd, numpy as np
 
 RES = 8
 TZ = "America/Argentina/Buenos_Aires"
+RAW_FILES = {"MODIS": "data/modis.csv", "VIIRS": "data/viirs.csv"}
+PARQUET_COLS = ["cell", "fecha", "n_modis", "n_viirs", "frp_max", "frp_sum",
+                "agreement", "lat", "lon", "region_id"]
 
 def load_modis(path):
     df = pd.read_csv(path, dtype={"acq_time": str})
@@ -30,6 +33,22 @@ def common_schema(df):
         "conf_cat": df["conf_cat"],
     })
     return out[out["conf_cat"] != "l"]            # política: descartar low
+
+def dedup_detections(raw):
+    """Una misma detección puede venir en SP y NRT: prefiere SP (consolidado).
+    Clave: satélite + posición (~11 m) + fecha + hora de adquisición."""
+    if "collection" not in raw.columns:
+        raw["collection"] = "SP"
+    raw["collection"] = raw["collection"].fillna("SP")
+    raw = raw.assign(
+        _rank=raw["collection"].map({"SP": 0, "NRT": 1}).fillna(0),
+        _lat=raw["latitude"].round(4),
+        _lon=raw["longitude"].round(4),
+    ).sort_values("_rank", kind="stable")
+    return raw.drop_duplicates(
+        subset=["satellite", "_lat", "_lon", "acq_date", "acq_time"],
+        keep="first",
+    ).drop(columns=["_rank", "_lat", "_lon"])
 
 def to_cells(df):
     df["cell"] = [h3.latlng_to_cell(la, lo, RES)
@@ -59,12 +78,37 @@ def assign_region(agg, regions_geojson):
     joined = joined[~joined.index.duplicated(keep="first")]
     return pd.DataFrame(joined.drop(columns=["geometry", "index_right"]))
 
-if __name__ == "__main__":
-    frames = [common_schema(load_modis(p)) for p in ["data/modis.csv"]] + \
-             [common_schema(load_viirs(p)) for p in ["data/viirs.csv"]]
-    df = to_cells(pd.concat(frames, ignore_index=True))
-    agg = assign_region(aggregate(df), "data/regiones.geojson")
-    agg = agg.dropna(subset=["region_id"])
-    agg["region_id"] = agg["region_id"].astype(int)
+def load_raw():
+    frames = []
+    for sensor, path in RAW_FILES.items():
+        if os.path.exists(path):
+            frames.append(load_modis(path) if sensor == "MODIS"
+                          else load_viirs(path))
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+def write_empty():
     os.makedirs("out", exist_ok=True)
-    agg.to_parquet("out/fire_cell_day.parquet")
+    pd.DataFrame(columns=PARQUET_COLS).to_parquet("out/fire_cell_day.parquet")
+
+if __name__ == "__main__":
+    raw = load_raw()
+    if raw.empty:
+        print("sin datos en data/*.csv -> parquet vacío")
+        write_empty()
+        sys.exit(0)
+
+    raw = dedup_detections(raw)
+    df = to_cells(common_schema(raw))
+    agg = aggregate(df)
+
+    if os.path.exists("data/regiones.geojson"):
+        agg = assign_region(agg, "data/regiones.geojson")
+    else:
+        agg["region_id"] = np.nan
+    agg = agg.dropna(subset=["region_id"])
+    if not agg.empty:
+        agg["region_id"] = agg["region_id"].astype(int)
+
+    os.makedirs("out", exist_ok=True)
+    agg[PARQUET_COLS].to_parquet("out/fire_cell_day.parquet")
+    print(f"{len(agg)} filas -> out/fire_cell_day.parquet")

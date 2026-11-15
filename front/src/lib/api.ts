@@ -49,6 +49,21 @@ export interface OnThisDayRow {
   frp: number;
 }
 
+export interface RefreshRequest {
+  region_id: number;
+  start: string;
+  end: string;
+}
+
+export interface RefreshStatus {
+  running: boolean;
+  started_at: string | null;
+  finished_at: string | null;
+  ok: boolean | null;
+  detail: string;
+  request: { region_id: number; start: string; end: string } | null;
+}
+
 export class ApiError extends Error {
   status?: number;
 
@@ -99,6 +114,36 @@ export function getFires(
   const params = new URLSearchParams({ region: String(region), day });
 
   return get<FiresResponse>(`/fires?${params}`, signal);
+}
+
+async function post<T>(
+  path: string,
+  body: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    signal,
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`API error ${response.status}`, response.status);
+  }
+
+  return (await response.json()) as T;
+}
+
+export function startRefresh(
+  request: RefreshRequest,
+  signal?: AbortSignal,
+): Promise<{ status: string }> {
+  return post<{ status: string }>("/refresh", request, signal);
+}
+
+export function getRefreshStatus(signal?: AbortSignal): Promise<RefreshStatus> {
+  return get<RefreshStatus>("/refresh/status", signal);
 }
 
 export function getOnThisDay(

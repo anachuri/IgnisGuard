@@ -17,16 +17,18 @@ import {
   Orbit,
   PanelRightClose,
   Radio,
+  RefreshCw,
   RotateCw,
   Satellite,
 } from "lucide-react";
+import { useState } from "react";
 
 import FireCalendar from "@/components/FireCalendar";
 import LocationSearch from "@/components/LocationSearch";
 import MetricsCard from "@/components/MetricsCard";
 import OnThisDayPanel from "@/components/OnThisDayPanel";
 import PredictionCard from "@/components/PredictionCard";
-import type { OnThisDayRow } from "@/lib/api";
+import type { OnThisDayRow, RefreshStatus } from "@/lib/api";
 import { addDaysIso } from "@/lib/fire-data";
 import type {
   DateMode,
@@ -58,6 +60,8 @@ interface SidebarDashboardProps {
   onThisDayStatus: LoadStatus;
   onThisDayError: string | null;
   onRetryOnThisDay: () => void;
+  onRefreshData: (start: string, end: string) => void;
+  refresh: RefreshStatus;
 }
 
 function LoadError({
@@ -163,10 +167,21 @@ export default function SidebarDashboard({
   onThisDayStatus,
   onThisDayError,
   onRetryOnThisDay,
+  onRefreshData,
+  refresh,
 }: SidebarDashboardProps) {
+  const [rangeStart, setRangeStart] = useState(() => addDaysIso(today, -30));
+  const [rangeEnd, setRangeEnd] = useState(today);
   const parsedDate = new Date(`${date}T12:00:00Z`);
   const highlightYear = parsedDate.getUTCFullYear();
   const highlightMonth = parsedDate.getUTCMonth();
+  const refreshDisabled =
+    refresh.running ||
+    location.apiId == null ||
+    !rangeStart ||
+    !rangeEnd ||
+    rangeStart > rangeEnd ||
+    rangeEnd > today;
 
   return (
     <aside
@@ -417,6 +432,94 @@ export default function SidebarDashboard({
               meta="Live"
             />
             <MetricsCard location={location} />
+          </section>
+
+          <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <section className="animate-fade-up [animation-delay:220ms]">
+            <SectionLabel
+              index="05"
+              title="Actualización de datos"
+              icon={RefreshCw}
+              meta="FIRMS"
+            />
+
+            <p className="mb-2 truncate font-mono text-[8px] uppercase tracking-[0.12em] text-slate-500">
+              Región <span className="text-slate-300">{location.name}</span>
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label
+                  htmlFor="refresh-start"
+                  className="mb-1 block font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
+                >
+                  Desde
+                </label>
+                <input
+                  id="refresh-start"
+                  type="date"
+                  value={rangeStart}
+                  min="2012-01-01"
+                  max={today}
+                  onChange={(event) => setRangeStart(event.target.value)}
+                  className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.035] px-2 font-mono text-[10px] tabular-nums text-slate-100 outline-none transition [color-scheme:dark] focus:border-cyan-400/45 focus:bg-white/[0.055] focus:ring-2 focus:ring-cyan-400/10"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="refresh-end"
+                  className="mb-1 block font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
+                >
+                  Hasta
+                </label>
+                <input
+                  id="refresh-end"
+                  type="date"
+                  value={rangeEnd}
+                  min="2012-01-01"
+                  max={today}
+                  onChange={(event) => setRangeEnd(event.target.value)}
+                  className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.035] px-2 font-mono text-[10px] tabular-nums text-slate-100 outline-none transition [color-scheme:dark] focus:border-cyan-400/45 focus:bg-white/[0.055] focus:ring-2 focus:ring-cyan-400/10"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onRefreshData(rangeStart, rangeEnd)}
+              disabled={refreshDisabled}
+              className={cn(
+                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 font-mono text-[9px] uppercase tracking-[0.14em] transition",
+                refresh.running
+                  ? "cursor-wait border-cyan-400/25 bg-cyan-400/[0.07] text-cyan-200/80"
+                  : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-cyan-400/30 hover:bg-cyan-400/[0.07] hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/10 disabled:hover:bg-white/[0.03] disabled:hover:text-slate-300",
+              )}
+            >
+              {refresh.running ? (
+                <Loader2 className="h-3 w-3 animate-spin text-cyan-300" />
+              ) : (
+                <RefreshCw className="h-3 w-3 text-cyan-300/70" />
+              )}
+              {refresh.running
+                ? "Descargando desde FIRMS…"
+                : "Actualizar datos FIRMS"}
+            </button>
+
+            {location.apiId == null ? (
+              <p className="mt-1.5 text-center font-mono text-[8px] uppercase tracking-[0.1em] text-amber-300/70">
+                Regiones no cargadas: no se puede actualizar.
+              </p>
+            ) : refresh.detail ? (
+              <p
+                className={cn(
+                  "mt-1.5 text-center font-mono text-[8px] uppercase tracking-[0.1em]",
+                  refresh.ok === false ? "text-red-300/80" : "text-slate-500",
+                )}
+              >
+                {refresh.detail}
+              </p>
+            ) : null}
           </section>
 
           <div className="mt-4 flex items-center justify-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">
