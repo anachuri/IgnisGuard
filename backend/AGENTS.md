@@ -7,7 +7,7 @@ Este archivo es contexto para un agente de código. Objetivo: reemplazar los dat
 NASA Space Apps Challenge Córdoba: **armonización de detecciones de incendios MODIS + VIIRS** en un calendario unificado de 20 años para analizar patrones históricos y anticipar emergencias.
 
 - **Frontend** (`front/`): Next.js 16 + React 19 + Tailwind 4. Hoy es 100% mock: no hay fetch, axios ni rutas `app/api`.
-- **Backend** (`backend/`): FastAPI + MySQL + pandas/GeoPandas/H3. Ya está escrito; el front debe consumirlo.
+- **Backend** (`backend/`): FastAPI + PostgreSQL + pandas/GeoPandas/H3. Ya está escrito; el front debe consumirlo.
 
 ## Reglas
 
@@ -94,7 +94,7 @@ Hoy los focos no cambian con la fecha, solo con la ubicación. Con la API deben 
 
 ```bash
 cd back
-docker compose up -d mysql
+docker compose up -d db
 pip install -r requirements.txt
 uvicorn app.main:app --reload   # http://localhost:8000/docs
 ```

@@ -324,6 +324,8 @@ export function toFirePoints(response: FiresResponse): FirePoint[] {
     lon: point.lon,
     intensity: clamp((point.frp_max ?? 0) / maxFrp, 0.12, 1),
     frp: Math.round((point.frp_max ?? 0) * 10) / 10,
+    nModis: point.n_modis,
+    nViirs: point.n_viirs,
     agreement: point.agreement,
   }));
 }

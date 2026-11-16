@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, text
 
 load_dotenv()
 
-engine = create_engine(os.getenv("DATABASE_URL", "mysql+pymysql://root:root@localhost:3306/ignisguard"))
+engine = create_engine(os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/ignisguard"))
 
 path = "out/fire_cell_day.parquet"
 if not os.path.exists(path):

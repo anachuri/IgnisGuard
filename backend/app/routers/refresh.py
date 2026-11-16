@@ -1,7 +1,7 @@
 """Refresh bajo demanda: una región + rango de fechas acotado.
 
 POST /api/refresh {region_id, start, end} -> 202 y corre el pipeline
-FIRMS -> harmonize -> MySQL en un thread background.
+FIRMS -> harmonize -> PostgreSQL en un thread background.
 GET /api/refresh/status -> estado para que el front haga polling.
 
 Los backfills históricos amplios se hacen por terminal con
@@ -78,7 +78,7 @@ def _run(bbox: str, start: dt.date, end: dt.date):
                                     nrt_start=nrt_start)
             subprocess.run([sys.executable, str(ETL / "harmonize.py")],
                            check=True)
-            subprocess.run([sys.executable, str(ETL / "load_mysql.py")],
+            subprocess.run([sys.executable, str(ETL / "load_db.py")],
                            check=True)
         finally:
             os.chdir(old_cwd)

@@ -1,4 +1,4 @@
-"""Refresh incremental del pipeline FIRMS -> harmonize -> MySQL.
+"""Refresh incremental del pipeline FIRMS -> harmonize -> PostgreSQL.
 
 Baja solo los días nuevos (SP consolidado + NRT para los más recientes),
 reprocesa y recarga de forma idempotente. Se puede usar como cron job.
@@ -8,7 +8,7 @@ Uso:
   python etl/refresh.py --from 2012-01-01 --to 2026-11-14 --bbox=W,S,E,N
   python etl/refresh.py --skip-load --bbox=W,S,E,N   # solo CSVs + parquet
 
-Sin --from/--to arranca desde la última fecha cargada en MySQL
+Sin --from/--to arranca desde la última fecha cargada en PostgreSQL
 (o el máximo acq_date de los CSVs) y re-descarga --overlap días por
 si FIRMS publica correcciones (el dedup absorbe los repetidos).
 """
@@ -31,7 +31,7 @@ import download_firms
 
 load_dotenv()
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "mysql+pymysql://root:root@localhost:3306/ignisguard"
+    "DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/ignisguard"
 )
 
 
@@ -46,7 +46,7 @@ def db_max_fecha():
             return None
         return v.date() if isinstance(v, dt.datetime) else v
     except Exception as exc:
-        print(f"aviso: MySQL no disponible ({exc.__class__.__name__}), "
+        print(f"aviso: PostgreSQL no disponible ({exc.__class__.__name__}), "
               "uso los CSVs como referencia")
         return None
 
@@ -78,7 +78,7 @@ def main():
     ap.add_argument("--overlap", type=int, default=download_firms.OVERLAP_DAYS,
                     help="días de re-descarga en modo incremental")
     ap.add_argument("--skip-load", action="store_true",
-                    help="no escribe en MySQL")
+                    help="no escribe en PostgreSQL")
     args = ap.parse_args()
     bboxes = args.bbox + args.bboxes
     if not bboxes:
@@ -107,7 +107,7 @@ def main():
 
     subprocess.run([sys.executable, "etl/harmonize.py"], check=True)
     if not args.skip_load:
-        subprocess.run([sys.executable, "etl/load_mysql.py"], check=True)
+        subprocess.run([sys.executable, "etl/load_db.py"], check=True)
 
 
 if __name__ == "__main__":

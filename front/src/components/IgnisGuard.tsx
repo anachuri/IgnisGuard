@@ -508,7 +508,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
           </div>
         </header>
 
-        <div className="pointer-events-none absolute bottom-5 left-4 z-20 hidden w-[252px] md:block">
+        <div className="pointer-events-none absolute bottom-5 right-4 z-20 hidden w-[252px] md:block">
           <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3 shadow-lg backdrop-blur-md">
             <div className="flex items-center gap-1.5">
               <Flame className="h-3 w-3 text-orange-400" />
@@ -535,6 +535,10 @@ function IgnisGuardDashboard({ today }: { today: string }) {
               <span className="flex items-center gap-1 text-[8px] text-slate-500">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_7px_2px_rgba(239,68,68,0.55)]" />
                 FRP crítico
+              </span>
+              <span className="flex items-center gap-1 text-[8px] text-slate-500">
+                <span className="h-2 w-2 rounded-full border border-cyan-300/70 shadow-[0_0_6px_2px_rgba(34,211,238,0.55)]" />
+                MODIS+VIIRS
               </span>
               <span className="ml-auto font-mono text-[7px] tabular-nums text-slate-600">
                 {firesStatus === "loading"

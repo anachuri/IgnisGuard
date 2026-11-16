@@ -61,6 +61,9 @@ export interface FirePoint {
   lon: number;
   intensity: number;
   frp: number;
+  /** Detecciones del día en la celda, por sensor. */
+  nModis?: number;
+  nViirs?: number;
   /** 1 si MODIS y VIIRS detectaron la misma celda H3. */
   agreement?: number;
 }

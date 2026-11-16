@@ -2,8 +2,10 @@
 .env
 
 # datos generados por el ETL
-data/
+data/*
 out/
+# geometría de regiones: la necesita la API (refresh) y el ETL
+!data/regiones.geojson
 
 # python
 __pycache__/

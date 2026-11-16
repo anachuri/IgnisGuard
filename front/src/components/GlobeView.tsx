@@ -1,5 +1,6 @@
 "use client";
 
+import { Flame } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { LAND_POINTS } from "@/lib/land-points";
@@ -56,6 +57,10 @@ export default function GlobeView({
   const draggingRef = useRef(false);
   const pointerRef = useRef({ x: 0, y: 0 });
   const resumeAtRef = useRef(0);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const tipFrpRef = useRef<HTMLSpanElement | null>(null);
+  const tipSensorsRef = useRef<HTMLDivElement | null>(null);
+  const tipAgreementRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -109,6 +114,9 @@ export default function GlobeView({
 
     const glowSprite = createGlowSprite();
     const firesStart = performance.now();
+    const mouse = { x: -1e4, y: -1e4, inside: false };
+    const frameFires: { x: number; y: number; fire: FirePoint }[] = [];
+    const tipShown = { id: "", w: 150, h: 60 };
 
     let width = 0;
     let height = 0;
@@ -388,6 +396,7 @@ export default function GlobeView({
       context.restore();
 
       // Focos de calor FIRMS / VIIRS.
+      frameFires.length = 0;
       if (showFires) {
         context.save();
         context.globalCompositeOperation = "lighter";
@@ -410,6 +419,8 @@ export default function GlobeView({
 
           const reveal = clamp((now - firesStart - index * 2.4) / 620, 0, 1);
           if (reveal <= 0) continue;
+
+          frameFires.push({ x: point.x, y: point.y, fire });
 
           const flicker = 0.82 + 0.18 * Math.sin(now * 0.0026 + index * 0.91);
           const agreementBoost = fire.agreement ? 1.3 : 1;
@@ -441,6 +452,59 @@ export default function GlobeView({
         }
 
         context.restore();
+      }
+
+      // Hit-test: foco más cercano al cursor -> tooltip DOM.
+      const tip = tooltipRef.current;
+      let hovered: { x: number; y: number; fire: FirePoint } | null = null;
+      if (mouse.inside && !draggingRef.current && showFires) {
+        let bestD2 = 18 * 18;
+        for (const candidate of frameFires) {
+          const dx = candidate.x - mouse.x;
+          const dy = candidate.y - mouse.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < bestD2) {
+            bestD2 = d2;
+            hovered = candidate;
+          }
+        }
+      }
+
+      if (tip) {
+        if (!hovered) {
+          tip.style.opacity = "0";
+          if (!draggingRef.current) canvas.style.cursor = "grab";
+        } else {
+          tip.style.opacity = "1";
+          if (tipShown.id !== hovered.fire.id) {
+            tipShown.id = hovered.fire.id;
+            const fire = hovered.fire;
+            if (tipFrpRef.current) {
+              tipFrpRef.current.textContent = `FRP máx ${Math.round(fire.frp)} MW`;
+            }
+            if (tipSensorsRef.current) {
+              tipSensorsRef.current.textContent = `${fire.nViirs ?? 0}× VIIRS · ${fire.nModis ?? 0}× MODIS`;
+            }
+            tipAgreementRef.current?.classList.toggle(
+              "hidden",
+              !fire.agreement,
+            );
+            tipShown.w = tip.offsetWidth;
+            tipShown.h = tip.offsetHeight;
+          }
+          // Anclado a la derecha del foco; solo se corre a la izquierda lo
+          // justo para que no se salga de la pantalla.
+          tip.style.transform = `translate(${clamp(
+            hovered.x + 14,
+            8,
+            Math.max(8, width - tipShown.w - 8),
+          )}px, ${clamp(
+            hovered.y - tipShown.h / 2,
+            8,
+            Math.max(8, height - tipShown.h - 8),
+          )}px)`;
+          if (!draggingRef.current) canvas.style.cursor = "pointer";
+        }
       }
 
       // Marcador de la región seleccionada.
@@ -596,6 +660,10 @@ export default function GlobeView({
     };
 
     const onPointerMove = (event: PointerEvent) => {
+      const rect = container.getBoundingClientRect();
+      mouse.x = event.clientX - rect.left;
+      mouse.y = event.clientY - rect.top;
+      mouse.inside = true;
       if (!draggingRef.current) return;
       const deltaX = event.clientX - pointerRef.current.x;
       const deltaY = event.clientY - pointerRef.current.y;
@@ -614,6 +682,10 @@ export default function GlobeView({
       }
     };
 
+    const onPointerLeave = () => {
+      mouse.inside = false;
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
         event.preventDefault();
@@ -630,6 +702,7 @@ export default function GlobeView({
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
     canvas.addEventListener("pointercancel", onPointerUp);
+    canvas.addEventListener("pointerleave", onPointerLeave);
     canvas.addEventListener("keydown", onKeyDown);
     frame = window.requestAnimationFrame(draw);
 
@@ -640,6 +713,7 @@ export default function GlobeView({
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerUp);
+      canvas.removeEventListener("pointerleave", onPointerLeave);
       canvas.removeEventListener("keydown", onKeyDown);
     };
   }, [firePoints, generating, location, showFires]);
@@ -653,6 +727,30 @@ export default function GlobeView({
         aria-label={`Globo terráqueo interactivo centrado en ${location.name}. Usá las flechas izquierda y derecha para rotarlo.`}
         className="h-full w-full cursor-grab touch-none outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/40"
       />
+
+      <div
+        ref={tooltipRef}
+        className="pointer-events-none absolute left-0 top-0 z-30 opacity-0 transition-opacity duration-100"
+      >
+        <div className="rounded-lg border border-cyan-400/25 bg-slate-950/85 px-2.5 py-1.5 shadow-xl shadow-black/50 backdrop-blur-sm">
+          <div className="flex items-center gap-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.08em] text-amber-200">
+            <Flame className="h-2.5 w-2.5" />
+            <span ref={tipFrpRef}>—</span>
+          </div>
+          <div
+            ref={tipSensorsRef}
+            className="mt-0.5 font-mono text-[8px] tracking-[0.06em] text-slate-400"
+          >
+            —
+          </div>
+          <div
+            ref={tipAgreementRef}
+            className="mt-0.5 hidden font-mono text-[7px] uppercase tracking-[0.12em] text-cyan-300/90"
+          >
+            Acuerdo MODIS + VIIRS
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

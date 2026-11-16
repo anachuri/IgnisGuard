@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ignisguard-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /docs
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FIRMS_MAP_KEY
+        sync: false

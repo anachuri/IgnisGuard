@@ -1,24 +1,26 @@
 services:
-  mysql:
-    image: mysql:8
+  db:
+    image: postgres:16
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: ignisguard
-    ports: ["3307:3306"]
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ignisguard
+    ports: ["5432:5432"]
     volumes:
-      - dbdata:/var/lib/mysql
+      - dbdata:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-proot"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ignisguard"]
       interval: 5s
       retries: 20
   api:
     build: .
     environment:
-      DATABASE_URL: mysql+pymysql://root:root@mysql:3306/ignisguard
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/ignisguard
+      FIRMS_MAP_KEY: ${FIRMS_MAP_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
     ports: ["8000:8000"]
     depends_on:
-      mysql:
+      db:
         condition: service_healthy
 volumes:
   dbdata:
