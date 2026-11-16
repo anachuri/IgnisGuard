@@ -20,23 +20,23 @@ interface DatePickerProps {
 }
 
 const MONTHS = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ] as const;
 
-const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const;
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
-const DAY_LABEL = new Intl.DateTimeFormat("es-AR", {
+const DAY_LABEL = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
   day: "numeric",
   month: "long",
@@ -208,11 +208,11 @@ export default function DatePicker({
           ref={triggerRef}
           type="button"
           onClick={togglePicker}
-          aria-label="Abrir calendario"
+          aria-label="Open calendar"
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-controls={open ? popoverId : undefined}
-          title="Abrir calendario"
+          title="Open calendar"
           className={cn(
             "grid h-11 w-11 shrink-0 place-items-center rounded-xl border transition",
             open
@@ -228,7 +228,7 @@ export default function DatePicker({
         <div
           id={popoverId}
           role="dialog"
-          aria-label="Seleccionar fecha de análisis"
+          aria-label="Select analysis date"
           className="absolute left-0 top-full z-50 mt-2 w-full animate-fade-in overflow-hidden rounded-xl border border-white/10 bg-slate-950/95 p-3 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-xl"
         >
           <div className="flex items-center justify-between gap-2">
@@ -236,7 +236,7 @@ export default function DatePicker({
               type="button"
               onClick={() => changeMonth(-1)}
               disabled={!canGoPrevious}
-              aria-label="Mes anterior"
+              aria-label="Previous month"
               className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.02] text-slate-400 transition hover:border-white/20 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -246,7 +246,7 @@ export default function DatePicker({
               <select
                 value={viewMonth}
                 onChange={(event) => setViewMonth(Number(event.target.value))}
-                aria-label="Mes"
+                aria-label="Month"
                 className="h-7 max-w-[112px] rounded-md border border-white/10 bg-white/[0.03] px-1.5 font-mono text-[9px] uppercase tracking-[0.06em] text-slate-200 outline-none transition focus:border-cyan-400/40 [&>option]:bg-slate-950"
               >
                 {MONTHS.map((month, index) => (
@@ -275,7 +275,7 @@ export default function DatePicker({
                     ),
                   );
                 }}
-                aria-label="Año"
+                aria-label="Year"
                 className="h-7 w-[60px] rounded-md border border-white/10 bg-white/[0.03] px-1 font-mono text-[9px] tabular-nums text-slate-200 outline-none transition focus:border-cyan-400/40 [&>option]:bg-slate-950"
               >
                 {years.map((year) => (
@@ -290,7 +290,7 @@ export default function DatePicker({
               type="button"
               onClick={() => changeMonth(1)}
               disabled={!canGoNext}
-              aria-label="Mes siguiente"
+              aria-label="Next month"
               className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.02] text-slate-400 transition hover:border-white/20 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
               <ChevronRight className="h-3.5 w-3.5" />
@@ -359,7 +359,7 @@ export default function DatePicker({
               disabled={today < min || today > max}
               className="rounded-md border border-cyan-400/20 bg-cyan-400/[0.06] px-2 py-1 font-mono text-[7px] uppercase tracking-[0.1em] text-cyan-200/80 transition hover:border-cyan-400/40 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Hoy
+              Today
             </button>
 
             <span className="min-w-0 truncate font-mono text-[8px] tabular-nums text-slate-500">
@@ -371,7 +371,7 @@ export default function DatePicker({
               onClick={() => setOpen(false)}
               className="rounded-md px-1.5 py-1 font-mono text-[7px] uppercase tracking-[0.1em] text-slate-500 transition hover:text-slate-200"
             >
-              Cerrar
+              Close
             </button>
           </div>
         </div>

@@ -1,31 +1,31 @@
 export const MONTHS_SHORT = [
-  "E",
-  "F",
-  "M",
-  "A",
-  "M",
-  "J",
-  "J",
-  "A",
-  "S",
-  "O",
-  "N",
-  "D",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ] as const;
 
 export const MONTHS_LONG = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ] as const;
 
 export function cn(
@@ -42,14 +42,14 @@ export function formatNumber(
   value: number,
   options: Intl.NumberFormatOptions = {},
 ): string {
-  return new Intl.NumberFormat("es-AR", {
+  return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 0,
     ...options,
   }).format(value);
 }
 
 export function formatIsoDate(isoDate: string): string {
-  return new Intl.DateTimeFormat("es-AR", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -58,7 +58,7 @@ export function formatIsoDate(isoDate: string): string {
 }
 
 export function weekdayFromIso(isoDate: string): string {
-  const weekday = new Intl.DateTimeFormat("es-AR", {
+  const weekday = new Intl.DateTimeFormat("en-US", {
     weekday: "long",
     timeZone: "UTC",
   }).format(new Date(`${isoDate}T12:00:00Z`));

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import DataNotice from "@/components/DataNotice";
 import GlobeView from "@/components/GlobeView";
 import SidebarDashboard from "@/components/SidebarDashboard";
 import Starfield from "@/components/Starfield";
@@ -99,7 +100,7 @@ function BootScreen() {
             IGNISGUARD<span className="text-orange-400">.</span>
           </p>
           <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.26em] text-cyan-300/70">
-            Inicializando telemetría orbital
+            Initializing orbital telemetry
           </p>
         </div>
 
@@ -222,7 +223,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       .catch((error: unknown) => {
         if (isAbortError(error)) return;
         setApiPrediction(null);
-        setForecastError("Meteomatics no disponible; usando estimación local.");
+        setForecastError("Meteomatics unavailable; using local estimate.");
       });
 
     return () => controller.abort();
@@ -240,7 +241,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
           setLocations(LOCATIONS);
           setRegionsStatus("error");
           setRegionsError(
-            "El backend no tiene regiones cargadas. Usando la lista local hasta que /api/regions devuelva datos.",
+            "The backend has no regions loaded. Using the local list until /api/regions returns data.",
           );
           return;
         }
@@ -253,7 +254,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
         setLocations(LOCATIONS);
         setRegionsStatus("error");
         setRegionsError(
-          "No se pudo conectar con /api/regions. Revisá NEXT_PUBLIC_API_URL o levantá FastAPI.",
+          "Could not connect to /api/regions. Check NEXT_PUBLIC_API_URL or start FastAPI.",
         );
       });
 
@@ -278,7 +279,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       setDataset(null);
       setCalendarStatus("error");
       setCalendarError(
-        regionsError ?? "La región seleccionada no tiene id de FastAPI.",
+        regionsError ?? "The selected region has no FastAPI id.",
       );
       return;
     }
@@ -297,7 +298,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
         setDataset(null);
         setCalendarStatus("error");
         setCalendarError(
-          "No se pudo cargar /api/calendar para esta región. Reintentá cuando el backend esté en línea.",
+          "Could not load /api/calendar for this region. Retry when the backend is online.",
         );
       });
 
@@ -322,7 +323,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       setOnThisDayRows([]);
       setOnThisDayStatus("error");
       setOnThisDayError(
-        regionsError ?? "La región seleccionada no tiene id de FastAPI.",
+        regionsError ?? "The selected region has no FastAPI id.",
       );
       return;
     }
@@ -342,9 +343,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
         if (isAbortError(error)) return;
         setOnThisDayRows([]);
         setOnThisDayStatus("error");
-        setOnThisDayError(
-          "No se pudo cargar /api/on-this-day para esta fecha.",
-        );
+        setOnThisDayError("Could not load /api/on-this-day for this date.");
       });
 
     return () => controller.abort();
@@ -358,7 +357,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       if (firesEnabled) {
         setFiresStatus("error");
         setFiresError(
-          "No hay detecciones para fechas futuras. Elegí una fecha histórica o de hoy.",
+          "No detections for future dates. Choose a historical date or today.",
         );
       } else {
         setFiresStatus("idle");
@@ -376,9 +375,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       setFirePoints([]);
       setFireDay(null);
       setFiresStatus("error");
-      setFiresError(
-        regionsError ?? "La región seleccionada no tiene id de FastAPI.",
-      );
+      setFiresError(regionsError ?? "The selected region has no FastAPI id.");
       return;
     }
 
@@ -417,7 +414,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
         setFireDay(null);
         setFiresStatus("error");
         setFiresError(
-          "No se pudo consultar /api/fires. Verificá que FastAPI esté en línea.",
+          "Could not query /api/fires. Make sure FastAPI is online.",
         );
       });
 
@@ -443,7 +440,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
     if (mode === "forecast") {
       setFiresStatus("error");
       setFiresError(
-        "No hay detecciones para fechas futuras. Elegí una fecha histórica o de hoy.",
+        "No detections for future dates. Choose a historical date or today.",
       );
       return;
     }
@@ -497,7 +494,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
           ...current,
           running: false,
           ok: false,
-          detail: "No se pudo iniciar el refresh en el backend.",
+          detail: "Could not start the refresh on the backend.",
         })),
       );
   };
@@ -603,7 +600,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
               </span>
               <span className="hidden font-mono text-[7px] uppercase tracking-[0.14em] text-emerald-300/90 sm:inline">
-                En línea
+                Online
               </span>
               <span className="hidden h-3 w-px bg-white/10 sm:block" />
               <MissionClock />
@@ -616,7 +613,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
             <div className="flex items-center gap-1.5">
               <Flame className="h-3 w-3 text-orange-400" />
               <span className="font-mono text-[7.5px] uppercase tracking-[0.17em] text-slate-400">
-                Focos de calor · VIIRS
+                Hotspots · VIIRS
               </span>
               <span
                 className={cn(
@@ -633,11 +630,11 @@ function IgnisGuardDashboard({ today }: { today: string }) {
             <div className="mt-2 flex items-center gap-3">
               <span className="flex items-center gap-1 text-[8px] text-slate-500">
                 <span className="h-1.5 w-1.5 rounded-full bg-orange-400 shadow-[0_0_7px_2px_rgba(251,146,60,0.55)]" />
-                FRP alto
+                High FRP
               </span>
               <span className="flex items-center gap-1 text-[8px] text-slate-500">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_7px_2px_rgba(239,68,68,0.55)]" />
-                FRP crítico
+                Critical FRP
               </span>
               <span className="flex items-center gap-1 text-[8px] text-slate-500">
                 <span className="h-2 w-2 rounded-full border border-cyan-300/70 shadow-[0_0_6px_2px_rgba(34,211,238,0.55)]" />
@@ -645,12 +642,12 @@ function IgnisGuardDashboard({ today }: { today: string }) {
               </span>
               <span className="ml-auto font-mono text-[7px] tabular-nums text-slate-600">
                 {firesStatus === "loading"
-                  ? "consultando"
+                  ? "querying"
                   : firesStatus === "error"
                     ? "error"
                     : firesEnabled
-                      ? `${firePoints.length} focos`
-                      : "sin datos"}
+                      ? `${firePoints.length} hotspots`
+                      : "no data"}
               </span>
             </div>
 
@@ -670,7 +667,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
           {generating ? (
             <div className="flex items-center gap-2 rounded-full border border-cyan-400/20 bg-slate-950/75 px-3 py-1 font-mono text-[7.5px] uppercase tracking-[0.14em] text-cyan-200/80 backdrop-blur-md">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-300" />
-              Consultando FIRMS · pasada orbital
+              Querying FIRMS · orbital pass
             </div>
           ) : firesError ? (
             <div className="flex items-center gap-2 rounded-full border border-red-400/25 bg-slate-950/80 px-3 py-1 font-mono text-[7.5px] uppercase tracking-[0.14em] text-red-200/85 backdrop-blur-md">
@@ -682,7 +679,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
                   onClick={retryFires}
                   className="pointer-events-auto ml-1 rounded border border-red-300/30 px-1.5 py-0.5 text-[7px] tracking-[0.1em] text-red-100/90 transition hover:bg-red-400/10"
                 >
-                  Reintentar
+                  Retry
                 </button>
               ) : null}
             </div>
@@ -690,24 +687,24 @@ function IgnisGuardDashboard({ today }: { today: string }) {
             <div className="flex items-center gap-2 rounded-full border border-orange-400/20 bg-slate-950/75 px-3 py-1 font-mono text-[7.5px] uppercase tracking-[0.14em] text-orange-200/80 backdrop-blur-md">
               <span className="h-1.5 w-1.5 rounded-full bg-orange-400 shadow-[0_0_7px_2px_rgba(251,146,60,0.6)]" />
               {firePoints.length > 0
-                ? `${formatNumber(firePoints.length)} focos · FRP máx. ${Math.round(maxFrp)} MW`
-                : "Sin detecciones para esta fecha"}
+                ? `${formatNumber(firePoints.length)} hotspots · max FRP ${Math.round(maxFrp)} MW`
+                : "No detections for this date"}
               {firePoints.length === 0 && firesSuggestion ? (
                 <button
                   type="button"
                   onClick={() => setDate(firesSuggestion.day)}
                   className="pointer-events-auto ml-1 rounded border border-orange-300/30 px-1.5 py-0.5 text-[7px] tracking-[0.1em] text-orange-100/90 transition hover:bg-orange-400/10"
                 >
-                  Pico del mes: {firesSuggestion.day.slice(8, 10)}/
+                  Month peak: {firesSuggestion.day.slice(8, 10)}/
                   {firesSuggestion.day.slice(5, 7)} ·{" "}
-                  {formatNumber(firesSuggestion.cells)} celdas
+                  {formatNumber(firesSuggestion.cells)} cells
                 </button>
               ) : null}
             </div>
           ) : (
             <div className="flex items-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.14em] text-slate-600">
               <Radio className="h-2.5 w-2.5 text-cyan-400/40" />
-              Sensor VIIRS 375 m en espera
+              VIIRS 375 m sensor standby
             </div>
           )}
 
@@ -738,10 +735,10 @@ function IgnisGuardDashboard({ today }: { today: string }) {
               )}
               <span className="relative truncate">
                 {generating
-                  ? "Consultando NASA FIRMS / VIIRS…"
+                  ? "Querying NASA FIRMS / VIIRS…"
                   : firesEnabled
-                    ? "Ocultar Puntos de Incendio"
-                    : "Generar Puntos de Incendio (NASA FIRMS / VIIRS)"}
+                    ? "Hide Fire Points"
+                    : "Generate Fire Points (NASA FIRMS / VIIRS)"}
               </span>
               {firesEnabled ? (
                 <span className="ml-1 shrink-0 rounded-full bg-slate-950/30 px-2 py-0.5 font-mono text-[8px] tabular-nums">
@@ -754,7 +751,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
 
             <p className="flex items-center gap-1 font-mono text-[6.5px] uppercase tracking-[0.14em] text-slate-700">
               <Sparkles className="h-2 w-2" />
-              Arrastrá el globo para rotar · Flechas ← →
+              Drag the globe to rotate · Arrow keys ← →
             </p>
           </div>
         </div>
@@ -811,15 +808,17 @@ function IgnisGuardDashboard({ today }: { today: string }) {
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
-          aria-label="Abrir panel de análisis"
+          aria-label="Open analytics panel"
           className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-1 rounded-l-xl border border-r-0 border-cyan-400/25 bg-slate-950/80 px-2 py-4 text-cyan-300 shadow-2xl backdrop-blur-md transition hover:bg-cyan-400/10 hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40"
         >
           <PanelRightOpen className="h-4 w-4" />
           <span className="hidden font-mono text-[7px] uppercase tracking-[0.18em] [writing-mode:vertical-rl] sm:inline">
-            Panel de análisis
+            Analytics panel
           </span>
         </button>
       ) : null}
+
+      <DataNotice />
     </main>
   );
 }

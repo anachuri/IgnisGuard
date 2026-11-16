@@ -495,7 +495,7 @@ export default function GlobeView({
             tipShown.id = hovered.fire.id;
             const fire = hovered.fire;
             if (tipFrpRef.current) {
-              tipFrpRef.current.textContent = `FRP máx ${Math.round(fire.frp)} MW`;
+              tipFrpRef.current.textContent = `Max FRP ${Math.round(fire.frp)} MW`;
             }
             if (tipSensorsRef.current) {
               tipSensorsRef.current.textContent = `${fire.nViirs ?? 0}× VIIRS · ${fire.nModis ?? 0}× MODIS`;
@@ -739,7 +739,7 @@ export default function GlobeView({
         ref={canvasRef}
         role="img"
         tabIndex={0}
-        aria-label={`Globo terráqueo interactivo centrado en ${location.name}. Usá las flechas izquierda y derecha para rotarlo.`}
+        aria-label={`Interactive globe centered on ${location.name}. Use the left and right arrow keys to rotate it.`}
         className="h-full w-full cursor-grab touch-none outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/40"
       />
 
@@ -762,7 +762,7 @@ export default function GlobeView({
             ref={tipAgreementRef}
             className="mt-0.5 hidden font-mono text-[7px] uppercase tracking-[0.12em] text-cyan-300/90"
           >
-            Acuerdo MODIS + VIIRS
+            MODIS + VIIRS agreement
           </div>
         </div>
       </div>

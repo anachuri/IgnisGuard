@@ -12,8 +12,7 @@ import type {
 import { clamp } from "./utils";
 
 const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL ??
-  "https://ignisguard-api.onrender.com/api"
+  process.env.NEXT_PUBLIC_API_URL ?? "https://ignisguard-api.onrender.com/api"
 ).replace(/\/+$/, "");
 
 export interface ApiRegion {
@@ -246,14 +245,59 @@ export function getForecast(
   return get<ForecastResponse>(`/forecast?${params}`, signal);
 }
 
+const RISK_LEVEL_TRANSLATIONS: Record<string, RiskLevel> = {
+  Bajo: "Low",
+  Moderado: "Moderate",
+  Alto: "High",
+  Extremo: "Extreme",
+};
+
+const CONDITION_TRANSLATIONS: Record<string, string> = {
+  "bajo riesgo": "low risk",
+  "riesgo moderado": "moderate risk",
+  "alto riesgo": "high risk",
+  "riesgo extremo": "extreme risk",
+};
+
+const SEASON_TRANSLATIONS: Record<string, string> = {
+  "Temporada crítica": "Critical season",
+  "Temporada alta": "High season",
+  "Temporada media": "Moderate season",
+  "Temporada baja": "Low season",
+};
+
+const DRIVER_TRANSLATIONS: Record<string, string> = {
+  Temperatura: "Temperature",
+  "Humedad relativa": "Relative humidity",
+  "Humedad vegetal": "Vegetation humidity",
+  "Viento sostenido": "Sustained wind",
+  "Índice estacional": "Seasonal index",
+  "Anomalía térmica": "Thermal anomaly",
+  "Biomasa seca": "Dry biomass",
+};
+
+function translateLookup<T>(
+  table: Record<string, T>,
+  value: string,
+): T | string {
+  return table[value] ?? value;
+}
+
 export function toPrediction(forecast: ForecastResponse): Prediction {
   return {
     probability: forecast.probability,
-    level: forecast.level,
-    conditionLabel: forecast.conditionLabel,
+    level:
+      RISK_LEVEL_TRANSLATIONS[forecast.level] ?? (forecast.level as RiskLevel),
+    conditionLabel: translateLookup(
+      CONDITION_TRANSLATIONS,
+      forecast.conditionLabel,
+    ),
     confidence: forecast.confidence,
-    seasonLabel: forecast.seasonLabel,
-    drivers: forecast.drivers,
+    seasonLabel: translateLookup(SEASON_TRANSLATIONS, forecast.seasonLabel),
+    drivers: forecast.drivers.map((driver) => ({
+      label: translateLookup(DRIVER_TRANSLATIONS, driver.label),
+      value: driver.value,
+    })),
     source: forecast.source,
     model: forecast.model,
   };
@@ -316,7 +360,7 @@ export async function downloadFiresCsv(
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const match = disposition.match(/filename="?([^";]+)"?/);
   const filename =
-    match?.[1] ?? `ignisguard_focos_${location.id}_${start}_${end}.csv`;
+    match?.[1] ?? `ignisguard_hotspots_${location.id}_${start}_${end}.csv`;
 
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);
@@ -353,17 +397,17 @@ function normalizeName(value: string): string {
 }
 
 function drynessLevel(score: number): DrynessLevel {
-  if (score < 35) return "Bajo";
-  if (score < 60) return "Moderado";
-  if (score < 80) return "Alto";
-  return "Crítico";
+  if (score < 35) return "Low";
+  if (score < 60) return "Moderate";
+  if (score < 80) return "High";
+  return "Critical";
 }
 
 function severityLevel(value: number): Severity {
-  if (value < 0.3) return "Baja";
-  if (value < 0.55) return "Media";
-  if (value < 0.8) return "Alta";
-  return "Extrema";
+  if (value < 0.3) return "Low";
+  if (value < 0.55) return "Medium";
+  if (value < 0.8) return "High";
+  return "Extreme";
 }
 
 function buildRegionLocation(region: ApiRegion): Location {
@@ -390,7 +434,7 @@ function buildRegionLocation(region: ApiRegion): Location {
     country: "",
     lat: region.lat,
     lon: region.lon,
-    biome: "Región monitoreada",
+    biome: "Monitored region",
     frpTotalGw: Math.round((400 + random() * 2400) * 10) / 10,
     baselineRisk,
     season,
@@ -468,11 +512,11 @@ export function toCustomLocation(input: {
   return {
     id: key,
     name: input.name,
-    province: input.country || "Ubicación personalizada",
+    province: input.country || "Custom location",
     country: input.country ?? "",
     lat: input.lat,
     lon: input.lon,
-    biome: "Punto personalizado",
+    biome: "Custom point",
     frpTotalGw: Math.round((400 + random() * 2400) * 10) / 10,
     baselineRisk,
     season,

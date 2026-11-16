@@ -50,7 +50,7 @@ export default function FireHistoryCard({
           ) : (
             <History className="h-3 w-3" />
           )}
-          {live ? "Monitoreo en curso" : "Auditoría histórica"}
+          {live ? "Live monitoring" : "Historical audit"}
         </span>
         <span
           className={`flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-wider ${
@@ -62,14 +62,14 @@ export default function FireHistoryCard({
           {live ? (
             <span className="h-1 w-1 rounded-full bg-emerald-300" />
           ) : null}
-          {live ? "Live" : "Archivo"}
+          {live ? "Live" : "Archive"}
         </span>
       </div>
 
       <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
-        Incendios registrados en{" "}
+        Fires recorded in{" "}
         <strong className="font-medium text-slate-200">{location.name}</strong>{" "}
-        el{" "}
+        on{" "}
         <strong className="font-medium text-slate-200">
           {formatIsoDate(date)}
         </strong>
@@ -79,13 +79,13 @@ export default function FireHistoryCard({
       {status === "loading" ? (
         <div className="mt-3 flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.12em] text-slate-500">
           <Loader2 className="h-3 w-3 animate-spin text-cyan-300/70" />
-          Consultando archivo FIRMS
+          Querying FIRMS archive
         </div>
       ) : status === "error" ? (
         <div className="mt-3 rounded-lg border border-red-400/20 bg-red-500/[0.06] px-2.5 py-2">
           <p className="flex items-start gap-1.5 text-[9px] leading-relaxed text-red-200/80">
             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-            {error ?? "No se pudo consultar el archivo de incendios."}
+            {error ?? "Could not query the fire archive."}
           </p>
           <button
             type="button"
@@ -93,13 +93,13 @@ export default function FireHistoryCard({
             className="mt-1.5 inline-flex items-center gap-1 font-mono text-[7px] uppercase tracking-[0.12em] text-red-200/80 transition hover:text-red-100"
           >
             <RotateCw className="h-2.5 w-2.5" />
-            Reintentar
+            Retry
           </button>
         </div>
       ) : !summary || summary.count === 0 ? (
         <div className="mt-3">
           <p className="text-[9px] leading-relaxed text-slate-500">
-            Sin detecciones registradas para esta fecha.
+            No detections recorded for this date.
           </p>
           {suggestion ? (
             <button
@@ -107,8 +107,8 @@ export default function FireHistoryCard({
               onClick={() => onSelectDate?.(suggestion.day)}
               className="mt-2 inline-flex items-center gap-1 rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-mono text-[7px] uppercase tracking-[0.12em] text-amber-200/90 transition hover:border-amber-300/40 hover:text-amber-100"
             >
-              Ver pico del mes: {formatIsoDate(suggestion.day)} ·{" "}
-              {formatNumber(suggestion.cells)} celdas
+              View month peak: {formatIsoDate(suggestion.day)} ·{" "}
+              {formatNumber(suggestion.cells)} cells
             </button>
           ) : null}
         </div>
@@ -117,19 +117,19 @@ export default function FireHistoryCard({
           <div className="mt-3 grid grid-cols-2 gap-1.5">
             {[
               {
-                label: "Celdas H3 con fuego",
+                label: "H3 cells with fire",
                 value: formatNumber(summary.count),
               },
               {
-                label: "Detecciones MODIS",
+                label: "MODIS detections",
                 value: formatNumber(summary.modis),
               },
               {
-                label: "Detecciones VIIRS",
+                label: "VIIRS detections",
                 value: formatNumber(summary.viirs),
               },
               {
-                label: "FRP máx.",
+                label: "Max FRP",
                 value: `${formatNumber(summary.frpMax)} MW`,
               },
             ].map((stat) => (
@@ -148,8 +148,8 @@ export default function FireHistoryCard({
           </div>
           <p className="mt-2 font-mono text-[7.5px] uppercase tracking-[0.12em] text-slate-600">
             {summary.agreements > 0
-              ? `${formatNumber(summary.agreements)} celdas confirmadas por ambos sensores`
-              : "Sin coincidencia dual MODIS + VIIRS"}
+              ? `${formatNumber(summary.agreements)} cells confirmed by both sensors`
+              : "No dual MODIS + VIIRS match"}
           </p>
         </>
       )}

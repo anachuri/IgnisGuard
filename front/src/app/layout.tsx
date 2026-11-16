@@ -15,13 +15,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "IgnisGuard · Burning Activity Calendar",
   description:
-    "Monitor satelital de actividad de incendios, estacionalidad histórica y predicción de riesgo con NASA FIRMS / VIIRS.",
+    "Satellite monitoring of fire activity, historical seasonality and risk forecasting with NASA FIRMS / VIIRS.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="es"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[#030712] font-sans text-slate-100">

@@ -75,7 +75,7 @@ export default function FireCalendar({
           <div className="flex items-center gap-1.5">
             <Flame className="h-3 w-3 text-orange-400/80" />
             <p className="text-[11px] font-medium text-slate-200">
-              FRP mensual normalizado
+              Normalized monthly FRP
             </p>
           </div>
           <p className="mt-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">
@@ -89,7 +89,7 @@ export default function FireCalendar({
             {formatNumber(dataset.totalDetections)}
           </p>
           <p className="font-mono text-[7px] uppercase tracking-[0.14em] text-slate-600">
-            celdas H3
+            H3 cells
           </p>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function FireCalendar({
                   key={`${year}-${MONTHS_LONG[month]}`}
                   type="button"
                   tabIndex={-1}
-                  aria-label={`${MONTHS_LONG[month]} ${year}: ${cell.frp.toFixed(1)} MW, ${formatNumber(cell.detections)} celdas H3`}
+                  aria-label={`${MONTHS_LONG[month]} ${year}: ${cell.frp.toFixed(1)} MW, ${formatNumber(cell.detections)} H3 cells`}
                   title={`${MONTHS_LONG[month]} ${year} · ${cell.frp.toFixed(1)} MW`}
                   onMouseEnter={(event) => showTooltip(event, cellIndex)}
                   onFocus={(event) => showTooltip(event, cellIndex)}
@@ -165,24 +165,24 @@ export default function FireCalendar({
 
       <div className="mt-3 flex items-center gap-2">
         <span className="font-mono text-[7px] uppercase tracking-wider text-slate-600">
-          Bajo
+          Low
         </span>
         <div className="h-1.5 flex-1 rounded-full bg-[linear-gradient(90deg,#0c1626,#1a3258,#2b547f,#537189,#8b8b73,#c2b05e,#fee838)]" />
         <span className="font-mono text-[7px] uppercase tracking-wider text-slate-600">
-          Extremo
+          Extreme
         </span>
       </div>
 
       <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-white/5 pt-2.5">
         <span className="flex items-center gap-1 font-mono text-[8px] uppercase tracking-[0.1em] text-slate-500">
           <Info className="h-2.5 w-2.5 text-cyan-400/60" />
-          Pico:{" "}
+          Peak:{" "}
           <strong className="font-medium text-slate-300">
             {MONTHS_LONG[dataset.peakMonth]}
           </strong>
         </span>
         <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-orange-300/70">
-          {Math.round(peakShare * 100)}% del FRP
+          {Math.round(peakShare * 100)}% of FRP
         </span>
       </div>
 
@@ -198,7 +198,7 @@ export default function FireCalendar({
             {tooltip.frp.toFixed(1)} MW
           </p>
           <p className="text-[9px] tabular-nums text-slate-400">
-            {formatNumber(tooltip.detections)} celdas H3
+            {formatNumber(tooltip.detections)} H3 cells
           </p>
         </div>
       ) : null}

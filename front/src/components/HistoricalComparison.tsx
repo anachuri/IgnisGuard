@@ -62,24 +62,24 @@ export default function HistoricalComparison({
         <div className="flex items-center gap-1.5">
           <BarChart3 className="h-3 w-3 text-cyan-300/80" />
           <p className="text-[11px] font-medium text-slate-200">
-            Comparación histórica
+            Historical comparison
           </p>
         </div>
         <span className="font-mono text-[7px] uppercase tracking-[0.12em] text-slate-600">
-          {year} vs promedio {dataset.years[0]}–
-          {dataset.years[dataset.years.length - 1]}
+          {year} vs {dataset.years[0]}–{dataset.years[dataset.years.length - 1]}{" "}
+          avg
         </span>
       </div>
 
       <div className="mt-2.5 flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-slate-950/35 px-2.5 py-2">
         <div>
           <p className="font-mono text-[7.5px] uppercase tracking-[0.14em] text-slate-500">
-            Focos detectados {year}
+            Hotspots detected {year}
           </p>
           <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-slate-100">
             {formatNumber(stats.yearTotal)}
             <span className="ml-1.5 font-mono text-[8px] font-normal text-slate-500">
-              prom. {formatNumber(Math.round(stats.avgYearTotal))}
+              avg. {formatNumber(Math.round(stats.avgYearTotal))}
             </span>
           </p>
         </div>
@@ -144,7 +144,7 @@ export default function HistoricalComparison({
       </div>
 
       <p className="mt-2 font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">
-        Desvío de celdas H3 vs media mensual del período
+        H3 cell deviation vs period monthly average
       </p>
     </div>
   );

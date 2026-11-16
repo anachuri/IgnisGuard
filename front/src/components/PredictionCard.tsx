@@ -27,7 +27,7 @@ export default function PredictionCard({
   onRetry,
 }: PredictionCardProps) {
   const tone =
-    prediction.level === "Extremo"
+    prediction.level === "Extreme"
       ? {
           border: "border-red-500/40",
           glow: "from-red-500/20 via-orange-500/10",
@@ -35,7 +35,7 @@ export default function PredictionCard({
           bar: "from-orange-400 via-red-500 to-red-600",
           badge: "border-red-400/30 bg-red-500/10 text-red-200",
         }
-      : prediction.level === "Alto"
+      : prediction.level === "High"
         ? {
             border: "border-orange-500/35",
             glow: "from-orange-500/18 via-amber-500/8",
@@ -43,7 +43,7 @@ export default function PredictionCard({
             bar: "from-amber-400 via-orange-500 to-red-500",
             badge: "border-orange-400/30 bg-orange-500/10 text-orange-200",
           }
-        : prediction.level === "Moderado"
+        : prediction.level === "Moderate"
           ? {
               border: "border-amber-400/30",
               glow: "from-amber-400/12 via-amber-500/5",
@@ -69,7 +69,7 @@ export default function PredictionCard({
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.22em] text-slate-400">
             <Sparkles className="h-3 w-3 text-orange-300" />
-            Predicción XGBoost
+            XGBoost forecast
           </div>
 
           <div className="mt-2 flex items-end gap-2">
@@ -86,11 +86,11 @@ export default function PredictionCard({
 
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-300">
             <AlertTriangle className="mr-1 inline h-3 w-3 -translate-y-px text-amber-400" />
-            Probabilidad de incendio:{" "}
+            Fire probability:{" "}
             <strong className="font-semibold text-white">
               {prediction.probability.toFixed(1)}%
             </strong>{" "}
-            — Condición de {prediction.conditionLabel}.
+            — {prediction.conditionLabel}.
           </p>
         </div>
 
@@ -142,10 +142,10 @@ export default function PredictionCard({
         {prediction.source
           ? `${prediction.source} · ${
               prediction.model === "heuristic-v0"
-                ? "Modelo heurístico v0"
-                : (prediction.model ?? "Modelo demostrativo")
+                ? "Heuristic model v0"
+                : (prediction.model ?? "Demo model")
             }`
-          : "Modelo demostrativo v2.4"}
+          : "Demo model v2.4"}
       </p>
 
       {fallbackReason ? (
@@ -160,7 +160,7 @@ export default function PredictionCard({
               className="inline-flex shrink-0 items-center gap-1 rounded border border-amber-300/25 px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-[0.1em] text-amber-100/80 transition hover:bg-amber-400/10"
             >
               <RotateCw className="h-2 w-2" />
-              Reintentar
+              Retry
             </button>
           ) : null}
         </div>

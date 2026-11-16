@@ -125,30 +125,30 @@ function seasonalWeight(season: readonly number[], date: Date): number {
 }
 
 function riskFromProbability(probability: number): RiskLevel {
-  if (probability < 30) return "Bajo";
-  if (probability < 55) return "Moderado";
-  if (probability < 85) return "Alto";
-  return "Extremo";
+  if (probability < 30) return "Low";
+  if (probability < 55) return "Moderate";
+  if (probability < 85) return "High";
+  return "Extreme";
 }
 
 function conditionFromLevel(level: RiskLevel): string {
   switch (level) {
-    case "Bajo":
-      return "bajo riesgo";
-    case "Moderado":
-      return "riesgo moderado";
-    case "Alto":
-      return "alto riesgo";
-    case "Extremo":
-      return "riesgo extremo";
+    case "Low":
+      return "low risk";
+    case "Moderate":
+      return "moderate risk";
+    case "High":
+      return "high risk";
+    case "Extreme":
+      return "extreme risk";
   }
 }
 
 function seasonLabelFromWeight(weight: number): string {
-  if (weight >= 0.8) return "Temporada crítica";
-  if (weight >= 0.55) return "Temporada alta";
-  if (weight >= 0.3) return "Temporada media";
-  return "Temporada baja";
+  if (weight >= 0.8) return "Critical season";
+  if (weight >= 0.55) return "High season";
+  if (weight >= 0.3) return "Moderate season";
+  return "Low season";
 }
 
 /**
@@ -198,11 +198,11 @@ export function buildPrediction(
     confidence,
     seasonLabel: seasonLabelFromWeight(seasonal),
     drivers: [
-      { label: "Anomalía térmica", value: `+${temperature.toFixed(1)} °C` },
-      { label: "Humedad vegetal", value: `${humidity.toFixed(1)} %` },
-      { label: "Viento sostenido", value: `${Math.round(wind)} km/h` },
+      { label: "Thermal anomaly", value: `+${temperature.toFixed(1)} °C` },
+      { label: "Vegetation humidity", value: `${humidity.toFixed(1)} %` },
+      { label: "Sustained wind", value: `${Math.round(wind)} km/h` },
       {
-        label: "Biomasa seca",
+        label: "Dry biomass",
         value: `${location.dryness.fuelLoad} %`,
       },
     ],

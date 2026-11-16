@@ -5,11 +5,11 @@ export type LoadStatus = "idle" | "loading" | "success" | "error";
 /** Horizonte de predicción en días, anclado a la fecha de consulta. */
 export type ForecastHorizon = 7 | 15 | 30;
 
-export type RiskLevel = "Bajo" | "Moderado" | "Alto" | "Extremo";
+export type RiskLevel = "Low" | "Moderate" | "High" | "Extreme";
 
-export type DrynessLevel = "Bajo" | "Moderado" | "Alto" | "Crítico";
+export type DrynessLevel = "Low" | "Moderate" | "High" | "Critical";
 
-export type Severity = "Baja" | "Media" | "Alta" | "Extrema";
+export type Severity = "Low" | "Medium" | "High" | "Extreme";
 
 export interface Location {
   id: string;

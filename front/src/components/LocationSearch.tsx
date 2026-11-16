@@ -229,7 +229,7 @@ export default function LocationSearch({
               ? `${listboxId}-${itemId(items[activeIndex], activeIndex)}`
               : undefined
           }
-          placeholder="Nombre o lat, lon (cualquier lugar)…"
+          placeholder="Name or lat, lon (any place)…"
           autoComplete="off"
           spellCheck={false}
           onFocus={() => setOpen(true)}
@@ -247,7 +247,7 @@ export default function LocationSearch({
           {query && query !== value.name ? (
             <button
               type="button"
-              aria-label="Limpiar búsqueda"
+              aria-label="Clear search"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 setQuery("");
@@ -271,7 +271,7 @@ export default function LocationSearch({
         <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-slate-950/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-xl">
           <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
             <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-500">
-              Sectores monitoreados
+              Monitored sectors
             </span>
             <span className="font-mono text-[8px] text-cyan-400/60">
               {filtered.length.toString().padStart(2, "0")}
@@ -281,14 +281,14 @@ export default function LocationSearch({
           <div
             id={listboxId}
             role="listbox"
-            aria-label="Ubicaciones disponibles"
+            aria-label="Available locations"
             className="scrollbar-slim max-h-64 overflow-y-auto p-1.5"
           >
             {items.length === 0 ? (
               <p className="px-3 py-4 text-xs leading-relaxed text-slate-500">
                 {remoteStatus === "loading"
-                  ? "Buscando en el mapa global…"
-                  : "Sin coincidencias. Probá con un nombre o con lat, lon."}
+                  ? "Searching the global map…"
+                  : "No matches. Try a name or lat, lon."}
               </p>
             ) : (
               items.map((item, index) => {
@@ -298,7 +298,7 @@ export default function LocationSearch({
                     <div key={itemId(item, index)}>
                       {showHeader ? (
                         <div className="mt-1 border-t border-white/5 px-3 pb-1 pt-2 font-mono text-[8px] uppercase tracking-[0.2em] text-slate-600">
-                          Resultados globales
+                          Global results
                         </div>
                       ) : null}
                       <button
@@ -359,10 +359,10 @@ export default function LocationSearch({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="truncate text-xs font-medium text-slate-200">
-                          Ir a {item.lat.toFixed(3)}, {item.lon.toFixed(3)}
+                          Go to {item.lat.toFixed(3)}, {item.lon.toFixed(3)}
                         </span>
                         <span className="mt-0.5 block truncate font-mono text-[8px] uppercase tracking-[0.12em] text-slate-500">
-                          Coordenadas exactas
+                          Exact coordinates
                         </span>
                       </span>
                     </button>
@@ -424,7 +424,7 @@ export default function LocationSearch({
             {remoteStatus === "loading" && items.length > 0 ? (
               <div className="flex items-center gap-1.5 px-3 py-2 font-mono text-[8px] uppercase tracking-[0.14em] text-slate-600">
                 <Loader2 className="h-3 w-3 animate-spin text-cyan-300/60" />
-                Buscando en el mapa global…
+                Searching the global map…
               </div>
             ) : null}
           </div>

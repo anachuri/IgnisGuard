@@ -94,10 +94,10 @@ function LoadError({
     <div className="rounded-xl border border-red-400/20 bg-red-500/[0.06] p-3.5">
       <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-red-200/90">
         <AlertTriangle className="h-3 w-3" />
-        Backend no disponible
+        Backend unavailable
       </div>
       <p className="mt-1.5 text-[9px] leading-relaxed text-slate-400">
-        {message ?? "No se pudo obtener la respuesta del servidor."}
+        {message ?? "Could not get a response from the server."}
       </p>
       <button
         type="button"
@@ -105,7 +105,7 @@ function LoadError({
         className="mt-2 inline-flex items-center gap-1 rounded-md border border-red-400/25 bg-red-500/10 px-2 py-1 font-mono text-[7px] uppercase tracking-[0.12em] text-red-200/80 transition hover:border-red-300/40 hover:text-red-100"
       >
         <RotateCw className="h-2.5 w-2.5" />
-        Reintentar
+        Retry
       </button>
     </div>
   );
@@ -116,7 +116,7 @@ function CalendarSkeleton() {
     <div className="rounded-xl border border-white/10 bg-slate-950/45 p-3.5">
       <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">
         <Loader2 className="h-3 w-3 animate-spin text-cyan-300/70" />
-        Cargando calendario histórico
+        Loading historical calendar
       </div>
       <div className="mt-3 grid grid-cols-12 gap-[3px]">
         {CALENDAR_SKELETON_CELLS.map((key) => (
@@ -155,15 +155,15 @@ function SectionLabel({ index, title, icon: Icon, meta }: SectionLabelProps) {
 }
 
 const DATE_PRESETS = [
-  { label: "Hoy", days: 0 },
+  { label: "Today", days: 0 },
   { label: "+15 d", days: 15 },
   { label: "+45 d", days: 45 },
 ];
 
 const FORECAST_HORIZONS: { label: string; days: ForecastHorizon }[] = [
-  { label: "7 días", days: 7 },
-  { label: "15 días", days: 15 },
-  { label: "1 mes", days: 30 },
+  { label: "7 days", days: 7 },
+  { label: "15 days", days: 15 },
+  { label: "1 month", days: 30 },
 ];
 
 const CALENDAR_SKELETON_CELLS = Array.from(
@@ -227,8 +227,8 @@ export default function SidebarDashboard({
         if (isAbortError(error)) return;
         setExportError(
           error instanceof ApiError && error.status === 400
-            ? "Rango inválido: máximo 366 días por descarga."
-            : "No se pudo generar el CSV. Verificá el backend.",
+            ? "Invalid range: 366 days max per download."
+            : "Could not generate the CSV. Check the backend.",
         );
       })
       .finally(() => setExporting(false));
@@ -238,7 +238,7 @@ export default function SidebarDashboard({
     <aside
       inert={!open}
       aria-hidden={!open}
-      aria-label="Panel de análisis IgnisGuard"
+      aria-label="IgnisGuard analytics panel"
       className={cn(
         "fixed bottom-3 right-3 top-3 z-30 w-[400px] max-w-[calc(100vw-1.5rem)] transition-transform duration-500 ease-out sm:bottom-4 sm:right-4 sm:top-4",
         open ? "translate-x-0" : "translate-x-[calc(100%+1.25rem)]",
@@ -263,7 +263,7 @@ export default function SidebarDashboard({
                   IGNISGUARD
                 </h2>
                 <p className="truncate font-mono text-[7.5px] uppercase tracking-[0.18em] text-slate-500">
-                  Panel de análisis · Burning Activity
+                  Analytics panel · Burning Activity
                 </p>
               </div>
             </div>
@@ -271,7 +271,7 @@ export default function SidebarDashboard({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Colapsar panel de análisis"
+              aria-label="Collapse analytics panel"
               className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03] text-slate-400 transition hover:border-cyan-400/30 hover:bg-cyan-400/10 hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40"
             >
               <PanelRightClose className="h-4 w-4" />
@@ -284,11 +284,11 @@ export default function SidebarDashboard({
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
               </span>
-              Sistema en línea
+              System online
             </span>
             <span className="flex items-center gap-1 font-mono text-[7.5px] uppercase tracking-[0.12em] text-slate-600">
               <Satellite className="h-2.5 w-2.5" />
-              Telemetría de superficie
+              Surface telemetry
             </span>
           </div>
         </header>
@@ -297,7 +297,7 @@ export default function SidebarDashboard({
           <section className="animate-fade-up">
             <SectionLabel
               index="01"
-              title="Ubicación, análisis y datos"
+              title="Location, analysis and data"
               icon={MapPinned}
               meta="Input"
             />
@@ -319,7 +319,7 @@ export default function SidebarDashboard({
                   onClick={onRetryRegions}
                   className="shrink-0 font-mono text-[7px] uppercase tracking-[0.1em] text-amber-200/80 transition hover:text-amber-100"
                 >
-                  Reintentar
+                  Retry
                 </button>
               </div>
             ) : null}
@@ -330,7 +330,7 @@ export default function SidebarDashboard({
                   htmlFor="analysis-date"
                   className="font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
                 >
-                  Fecha de análisis - Predicciones
+                  Analysis date - Predictions
                 </label>
                 <span className="font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">
                   UTC −03
@@ -379,7 +379,7 @@ export default function SidebarDashboard({
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">
-                      Horizonte desde hoy
+                      Horizon from today
                     </span>
                     <div className="flex shrink-0 items-center gap-1">
                       {FORECAST_HORIZONS.map((horizon) => {
@@ -442,7 +442,7 @@ export default function SidebarDashboard({
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">
                   <RefreshCw className="h-3 w-3 text-cyan-300/60" />
-                  Actualización de datos · FIRMS
+                  Data refresh · FIRMS
                 </span>
                 <span className="truncate font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">
                   {location.name}
@@ -455,7 +455,7 @@ export default function SidebarDashboard({
                     htmlFor="refresh-start"
                     className="mb-1 block font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
                   >
-                    Desde
+                    From
                   </label>
                   <input
                     id="refresh-start"
@@ -472,7 +472,7 @@ export default function SidebarDashboard({
                     htmlFor="refresh-end"
                     className="mb-1 block font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
                   >
-                    Hasta
+                    To
                   </label>
                   <input
                     id="refresh-end"
@@ -503,7 +503,7 @@ export default function SidebarDashboard({
                   ) : (
                     <RefreshCw className="h-3 w-3 shrink-0 text-cyan-300/70" />
                   )}
-                  {refresh.running ? "Descargando…" : "Actualizar FIRMS"}
+                  {refresh.running ? "Downloading…" : "Refresh FIRMS"}
                 </button>
 
                 <button
@@ -522,7 +522,7 @@ export default function SidebarDashboard({
                   ) : (
                     <Download className="h-3 w-3 shrink-0 text-emerald-300/70" />
                   )}
-                  {exporting ? "Generando…" : "CSV de focos"}
+                  {exporting ? "Generating…" : "Hotspot CSV"}
                 </button>
               </div>
 
@@ -548,9 +548,9 @@ export default function SidebarDashboard({
           <section className="animate-fade-up [animation-delay:100ms]">
             <SectionLabel
               index="02"
-              title="Estacionalidad histórica"
+              title="Historical seasonality"
               icon={CalendarRange}
-              meta="20 años"
+              meta="20 years"
             />
             {calendarStatus === "loading" ? (
               <CalendarSkeleton />
@@ -580,7 +580,7 @@ export default function SidebarDashboard({
           <section className="animate-fade-up [animation-delay:180ms]">
             <SectionLabel
               index="03"
-              title="Métricas del sector"
+              title="Sector metrics"
               icon={Activity}
               meta="Live"
             />
@@ -589,7 +589,7 @@ export default function SidebarDashboard({
 
           <div className="mt-4 flex items-center justify-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">
             <Crosshair className="h-2.5 w-2.5" />
-            Calendario y focos FastAPI · Predicción demo
+            Calendar & hotspots via FastAPI · Demo forecast
           </div>
         </div>
 
