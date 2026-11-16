@@ -12,7 +12,8 @@ import type {
 import { clamp } from "./utils";
 
 const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api"
+  process.env.NEXT_PUBLIC_API_URL ??
+  "https://ignisguard-api.onrender.com/api"
 ).replace(/\/+$/, "");
 
 export interface ApiRegion {
