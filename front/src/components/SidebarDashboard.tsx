@@ -8,31 +8,39 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   AlertTriangle,
-  CalendarDays,
   CalendarRange,
   Crosshair,
-  History,
+  Download,
   Loader2,
   MapPinned,
   Orbit,
   PanelRightClose,
-  Radio,
   RefreshCw,
   RotateCw,
   Satellite,
 } from "lucide-react";
 import { useState } from "react";
 
+import DatePicker from "@/components/DatePicker";
 import FireCalendar from "@/components/FireCalendar";
+import FireHistoryCard from "@/components/FireHistoryCard";
+import HistoricalComparison from "@/components/HistoricalComparison";
 import LocationSearch from "@/components/LocationSearch";
 import MetricsCard from "@/components/MetricsCard";
 import OnThisDayPanel from "@/components/OnThisDayPanel";
 import PredictionCard from "@/components/PredictionCard";
-import type { OnThisDayRow, RefreshStatus } from "@/lib/api";
+import type {
+  FireDayRow,
+  FireDaySummary,
+  OnThisDayRow,
+  RefreshStatus,
+} from "@/lib/api";
+import { ApiError, downloadFiresCsv, isAbortError } from "@/lib/api";
 import { addDaysIso } from "@/lib/fire-data";
 import type {
   DateMode,
   FireDataset,
+  ForecastHorizon,
   LoadStatus,
   Location,
   Prediction,
@@ -50,7 +58,18 @@ interface SidebarDashboardProps {
   today: string;
   mode: DateMode;
   prediction: Prediction | null;
+  predictionDate: string;
+  forecastHorizon: ForecastHorizon;
+  onForecastHorizonChange: (horizon: ForecastHorizon) => void;
+  forecastError: string | null;
+  onRetryForecast: () => void;
+  dayFires: FireDaySummary | null;
+  dayFiresStatus: LoadStatus;
+  dayFiresError: string | null;
+  onRetryDayFires: () => void;
   dataset: FireDataset | null;
+  onSelectMonth: (year: number, monthIndex: number) => void;
+  firesSuggestion: FireDayRow | null;
   calendarStatus: LoadStatus;
   calendarError: string | null;
   onRetryCalendar: () => void;
@@ -141,6 +160,12 @@ const DATE_PRESETS = [
   { label: "+45 d", days: 45 },
 ];
 
+const FORECAST_HORIZONS: { label: string; days: ForecastHorizon }[] = [
+  { label: "7 días", days: 7 },
+  { label: "15 días", days: 15 },
+  { label: "1 mes", days: 30 },
+];
+
 const CALENDAR_SKELETON_CELLS = Array.from(
   { length: 72 },
   (_, index) => `calendar-skeleton-${index}`,
@@ -157,7 +182,18 @@ export default function SidebarDashboard({
   today,
   mode,
   prediction,
+  predictionDate,
+  forecastHorizon,
+  onForecastHorizonChange,
+  forecastError,
+  onRetryForecast,
+  dayFires,
+  dayFiresStatus,
+  dayFiresError,
+  onRetryDayFires,
   dataset,
+  onSelectMonth,
+  firesSuggestion,
   calendarStatus,
   calendarError,
   onRetryCalendar,
@@ -172,16 +208,31 @@ export default function SidebarDashboard({
 }: SidebarDashboardProps) {
   const [rangeStart, setRangeStart] = useState(() => addDaysIso(today, -30));
   const [rangeEnd, setRangeEnd] = useState(today);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const parsedDate = new Date(`${date}T12:00:00Z`);
   const highlightYear = parsedDate.getUTCFullYear();
   const highlightMonth = parsedDate.getUTCMonth();
-  const refreshDisabled =
-    refresh.running ||
-    location.apiId == null ||
-    !rangeStart ||
-    !rangeEnd ||
-    rangeStart > rangeEnd ||
-    rangeEnd > today;
+  const rangeInvalid =
+    !rangeStart || !rangeEnd || rangeStart > rangeEnd || rangeEnd > today;
+  const refreshDisabled = refresh.running || rangeInvalid;
+  const exportDisabled = exporting || rangeInvalid;
+
+  const handleExport = () => {
+    if (exportDisabled) return;
+    setExporting(true);
+    setExportError(null);
+    downloadFiresCsv(location, rangeStart, rangeEnd)
+      .catch((error: unknown) => {
+        if (isAbortError(error)) return;
+        setExportError(
+          error instanceof ApiError && error.status === 400
+            ? "Rango inválido: máximo 366 días por descarga."
+            : "No se pudo generar el CSV. Verificá el backend.",
+        );
+      })
+      .finally(() => setExporting(false));
+  };
 
   return (
     <aside
@@ -246,7 +297,7 @@ export default function SidebarDashboard({
           <section className="animate-fade-up">
             <SectionLabel
               index="01"
-              title="Ubicación y ventana temporal"
+              title="Ubicación, análisis y datos"
               icon={MapPinned}
               meta="Input"
             />
@@ -279,27 +330,21 @@ export default function SidebarDashboard({
                   htmlFor="analysis-date"
                   className="font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
                 >
-                  Fecha de análisis
+                  Fecha de análisis - Predicciones
                 </label>
                 <span className="font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">
                   UTC −03
                 </span>
               </div>
 
-              <div className="relative">
-                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-cyan-300/60" />
-                <input
-                  id="analysis-date"
-                  type="date"
-                  value={date}
-                  min="2006-01-01"
-                  max="2032-12-31"
-                  onChange={(event) =>
-                    event.target.value && onDateChange(event.target.value)
-                  }
-                  className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.035] pl-9 pr-3 font-mono text-[11px] tabular-nums text-slate-100 outline-none transition [color-scheme:dark] focus:border-cyan-400/45 focus:bg-white/[0.055] focus:ring-2 focus:ring-cyan-400/10"
-                />
-              </div>
+              <DatePicker
+                id="analysis-date"
+                value={date}
+                today={today}
+                onChange={onDateChange}
+                min="2006-01-01"
+                max="2032-12-31"
+              />
 
               <div className="mt-2 flex items-center justify-between gap-2">
                 <p className="min-w-0 truncate text-[9px] text-slate-500">
@@ -331,52 +376,170 @@ export default function SidebarDashboard({
 
             <div className="mt-3">
               {mode === "forecast" && prediction ? (
-                <PredictionCard
-                  prediction={prediction}
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">
+                      Horizonte desde hoy
+                    </span>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {FORECAST_HORIZONS.map((horizon) => {
+                        const active = horizon.days === forecastHorizon;
+                        return (
+                          <button
+                            key={horizon.days}
+                            type="button"
+                            onClick={() =>
+                              onForecastHorizonChange(horizon.days)
+                            }
+                            className={cn(
+                              "rounded-md border px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-[0.08em] transition",
+                              active
+                                ? "border-orange-400/40 bg-orange-400/10 text-orange-200"
+                                : "border-white/10 bg-white/[0.02] text-slate-500 hover:border-white/20 hover:text-slate-300",
+                            )}
+                          >
+                            {horizon.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <PredictionCard
+                    prediction={prediction}
+                    date={predictionDate}
+                    location={location}
+                    fallbackReason={forecastError}
+                    onRetry={onRetryForecast}
+                  />
+                </div>
+              ) : mode !== "forecast" ? (
+                <FireHistoryCard
+                  mode={mode}
                   date={date}
                   location={location}
+                  summary={dayFires}
+                  status={dayFiresStatus}
+                  error={dayFiresError}
+                  onRetry={onRetryDayFires}
+                  suggestion={firesSuggestion}
+                  onSelectDate={onDateChange}
                 />
-              ) : mode === "historical" ? (
-                <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.045] p-3.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.16em] text-amber-300/90">
-                      <History className="h-3 w-3" />
-                      Auditoría Histórica
-                    </span>
-                    <span className="rounded border border-amber-400/20 bg-amber-400/10 px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-wider text-amber-200/80">
-                      Archivo
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
-                    Reconstrucción satelital del{" "}
-                    <strong className="font-medium text-slate-200">
-                      {formatIsoDate(date)}
-                    </strong>
-                    . El registro VIIRS/MODIS permite comparar la actividad
-                    térmica con el acumulado de las últimas dos décadas.
-                  </p>
+              ) : null}
+            </div>
+
+            <div className="mt-3">
+              <OnThisDayPanel
+                location={location}
+                date={date}
+                rows={onThisDayRows}
+                status={onThisDayStatus}
+                error={onThisDayError}
+                onRetry={onRetryOnThisDay}
+              />
+            </div>
+
+            <div className="mt-4 border-t border-white/5 pt-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">
+                  <RefreshCw className="h-3 w-3 text-cyan-300/60" />
+                  Actualización de datos · FIRMS
+                </span>
+                <span className="truncate font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">
+                  {location.name}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label
+                    htmlFor="refresh-start"
+                    className="mb-1 block font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
+                  >
+                    Desde
+                  </label>
+                  <input
+                    id="refresh-start"
+                    type="date"
+                    value={rangeStart}
+                    min="2012-01-01"
+                    max={today}
+                    onChange={(event) => setRangeStart(event.target.value)}
+                    className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.035] px-2 font-mono text-[10px] tabular-nums text-slate-100 outline-none transition [color-scheme:dark] focus:border-cyan-400/45 focus:bg-white/[0.055] focus:ring-2 focus:ring-cyan-400/10"
+                  />
                 </div>
-              ) : (
-                <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.045] p-3.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.16em] text-emerald-300/90">
-                      <Radio className="h-3 w-3" />
-                      Monitoreo en curso
-                    </span>
-                    <span className="flex items-center gap-1 rounded border border-emerald-400/20 bg-emerald-400/10 px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-wider text-emerald-200/80">
-                      <span className="h-1 w-1 rounded-full bg-emerald-300" />
-                      Live
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
-                    Ventana satelital activa para{" "}
-                    <strong className="font-medium text-slate-200">
-                      {location.name}
-                    </strong>
-                    . Los focos FIRMS se actualizan con cada pasada orbital.
-                  </p>
+                <div>
+                  <label
+                    htmlFor="refresh-end"
+                    className="mb-1 block font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
+                  >
+                    Hasta
+                  </label>
+                  <input
+                    id="refresh-end"
+                    type="date"
+                    value={rangeEnd}
+                    min="2012-01-01"
+                    max={today}
+                    onChange={(event) => setRangeEnd(event.target.value)}
+                    className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.035] px-2 font-mono text-[10px] tabular-nums text-slate-100 outline-none transition [color-scheme:dark] focus:border-cyan-400/45 focus:bg-white/[0.055] focus:ring-2 focus:ring-cyan-400/10"
+                  />
                 </div>
-              )}
+              </div>
+
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => onRefreshData(rangeStart, rangeEnd)}
+                  disabled={refreshDisabled}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 font-mono text-[9px] uppercase tracking-[0.12em] transition",
+                    refresh.running
+                      ? "cursor-wait border-cyan-400/25 bg-cyan-400/[0.07] text-cyan-200/80"
+                      : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-cyan-400/30 hover:bg-cyan-400/[0.07] hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/10 disabled:hover:bg-white/[0.03] disabled:hover:text-slate-300",
+                  )}
+                >
+                  {refresh.running ? (
+                    <Loader2 className="h-3 w-3 shrink-0 animate-spin text-cyan-300" />
+                  ) : (
+                    <RefreshCw className="h-3 w-3 shrink-0 text-cyan-300/70" />
+                  )}
+                  {refresh.running ? "Descargando…" : "Actualizar FIRMS"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  disabled={exportDisabled}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 font-mono text-[9px] uppercase tracking-[0.12em] transition",
+                    exporting
+                      ? "cursor-wait border-emerald-400/25 bg-emerald-400/[0.07] text-emerald-200/80"
+                      : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-emerald-400/30 hover:bg-emerald-400/[0.07] hover:text-emerald-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/10 disabled:hover:bg-white/[0.03] disabled:hover:text-slate-300",
+                  )}
+                >
+                  {exporting ? (
+                    <Loader2 className="h-3 w-3 shrink-0 animate-spin text-emerald-300" />
+                  ) : (
+                    <Download className="h-3 w-3 shrink-0 text-emerald-300/70" />
+                  )}
+                  {exporting ? "Generando…" : "CSV de focos"}
+                </button>
+              </div>
+
+              {exportError ? (
+                <p className="mt-1.5 text-center font-mono text-[8px] uppercase tracking-[0.1em] text-red-300/80">
+                  {exportError}
+                </p>
+              ) : refresh.detail ? (
+                <p
+                  className={cn(
+                    "mt-1.5 text-center font-mono text-[8px] uppercase tracking-[0.1em]",
+                    refresh.ok === false ? "text-red-300/80" : "text-slate-500",
+                  )}
+                >
+                  {refresh.detail}
+                </p>
+              ) : null}
             </div>
           </section>
 
@@ -394,132 +557,34 @@ export default function SidebarDashboard({
             ) : calendarStatus === "error" ? (
               <LoadError message={calendarError} onRetry={onRetryCalendar} />
             ) : dataset ? (
-              <FireCalendar
-                dataset={dataset}
-                location={location}
-                highlightYear={highlightYear}
-                highlightMonth={highlightMonth}
-              />
+              <>
+                <FireCalendar
+                  dataset={dataset}
+                  location={location}
+                  highlightYear={highlightYear}
+                  highlightMonth={highlightMonth}
+                  onSelectMonth={onSelectMonth}
+                />
+                <div className="mt-3">
+                  <HistoricalComparison
+                    dataset={dataset}
+                    year={highlightYear}
+                  />
+                </div>
+              </>
             ) : null}
-          </section>
-
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          <section className="animate-fade-up [animation-delay:140ms]">
-            <SectionLabel
-              index="03"
-              title="Archivo del día"
-              icon={History}
-              meta="MODIS + VIIRS"
-            />
-            <OnThisDayPanel
-              location={location}
-              date={date}
-              rows={onThisDayRows}
-              status={onThisDayStatus}
-              error={onThisDayError}
-              onRetry={onRetryOnThisDay}
-            />
           </section>
 
           <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
           <section className="animate-fade-up [animation-delay:180ms]">
             <SectionLabel
-              index="04"
+              index="03"
               title="Métricas del sector"
               icon={Activity}
               meta="Live"
             />
             <MetricsCard location={location} />
-          </section>
-
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          <section className="animate-fade-up [animation-delay:220ms]">
-            <SectionLabel
-              index="05"
-              title="Actualización de datos"
-              icon={RefreshCw}
-              meta="FIRMS"
-            />
-
-            <p className="mb-2 truncate font-mono text-[8px] uppercase tracking-[0.12em] text-slate-500">
-              Región <span className="text-slate-300">{location.name}</span>
-            </p>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label
-                  htmlFor="refresh-start"
-                  className="mb-1 block font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
-                >
-                  Desde
-                </label>
-                <input
-                  id="refresh-start"
-                  type="date"
-                  value={rangeStart}
-                  min="2012-01-01"
-                  max={today}
-                  onChange={(event) => setRangeStart(event.target.value)}
-                  className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.035] px-2 font-mono text-[10px] tabular-nums text-slate-100 outline-none transition [color-scheme:dark] focus:border-cyan-400/45 focus:bg-white/[0.055] focus:ring-2 focus:ring-cyan-400/10"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="refresh-end"
-                  className="mb-1 block font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500"
-                >
-                  Hasta
-                </label>
-                <input
-                  id="refresh-end"
-                  type="date"
-                  value={rangeEnd}
-                  min="2012-01-01"
-                  max={today}
-                  onChange={(event) => setRangeEnd(event.target.value)}
-                  className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.035] px-2 font-mono text-[10px] tabular-nums text-slate-100 outline-none transition [color-scheme:dark] focus:border-cyan-400/45 focus:bg-white/[0.055] focus:ring-2 focus:ring-cyan-400/10"
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onRefreshData(rangeStart, rangeEnd)}
-              disabled={refreshDisabled}
-              className={cn(
-                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 font-mono text-[9px] uppercase tracking-[0.14em] transition",
-                refresh.running
-                  ? "cursor-wait border-cyan-400/25 bg-cyan-400/[0.07] text-cyan-200/80"
-                  : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-cyan-400/30 hover:bg-cyan-400/[0.07] hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/10 disabled:hover:bg-white/[0.03] disabled:hover:text-slate-300",
-              )}
-            >
-              {refresh.running ? (
-                <Loader2 className="h-3 w-3 animate-spin text-cyan-300" />
-              ) : (
-                <RefreshCw className="h-3 w-3 text-cyan-300/70" />
-              )}
-              {refresh.running
-                ? "Descargando desde FIRMS…"
-                : "Actualizar datos FIRMS"}
-            </button>
-
-            {location.apiId == null ? (
-              <p className="mt-1.5 text-center font-mono text-[8px] uppercase tracking-[0.1em] text-amber-300/70">
-                Regiones no cargadas: no se puede actualizar.
-              </p>
-            ) : refresh.detail ? (
-              <p
-                className={cn(
-                  "mt-1.5 text-center font-mono text-[8px] uppercase tracking-[0.1em]",
-                  refresh.ok === false ? "text-red-300/80" : "text-slate-500",
-                )}
-              >
-                {refresh.detail}
-              </p>
-            ) : null}
           </section>
 
           <div className="mt-4 flex items-center justify-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.12em] text-slate-700">

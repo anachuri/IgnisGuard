@@ -1,6 +1,12 @@
 "use client";
 
-import { AlertTriangle, Crosshair, Flame, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Crosshair,
+  Flame,
+  RotateCw,
+  Sparkles,
+} from "lucide-react";
 
 import type { Location, Prediction } from "@/lib/types";
 import { formatIsoDate } from "@/lib/utils";
@@ -9,12 +15,16 @@ interface PredictionCardProps {
   prediction: Prediction;
   date: string;
   location: Location;
+  fallbackReason?: string | null;
+  onRetry?: () => void;
 }
 
 export default function PredictionCard({
   prediction,
   date,
   location,
+  fallbackReason,
+  onRetry,
 }: PredictionCardProps) {
   const tone =
     prediction.level === "Extremo"
@@ -128,8 +138,33 @@ export default function PredictionCard({
       </div>
 
       <p className="relative mt-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-slate-600">
-        {prediction.seasonLabel} · Modelo demostrativo v2.4
+        {prediction.seasonLabel} ·{" "}
+        {prediction.source
+          ? `${prediction.source} · ${
+              prediction.model === "heuristic-v0"
+                ? "Modelo heurístico v0"
+                : (prediction.model ?? "Modelo demostrativo")
+            }`
+          : "Modelo demostrativo v2.4"}
       </p>
+
+      {fallbackReason ? (
+        <div className="relative mt-2 flex items-center justify-between gap-2 rounded-md border border-amber-400/15 bg-amber-400/[0.04] px-2 py-1">
+          <span className="truncate font-mono text-[7px] uppercase tracking-[0.1em] text-amber-200/65">
+            {fallbackReason}
+          </span>
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex shrink-0 items-center gap-1 rounded border border-amber-300/25 px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-[0.1em] text-amber-100/80 transition hover:bg-amber-400/10"
+            >
+              <RotateCw className="h-2 w-2" />
+              Reintentar
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

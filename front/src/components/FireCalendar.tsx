@@ -12,6 +12,7 @@ interface FireCalendarProps {
   location: Location;
   highlightYear?: number;
   highlightMonth?: number;
+  onSelectMonth?: (year: number, monthIndex: number) => void;
 }
 
 interface TooltipState {
@@ -28,6 +29,7 @@ export default function FireCalendar({
   location,
   highlightYear,
   highlightMonth,
+  onSelectMonth,
 }: FireCalendarProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
@@ -143,12 +145,13 @@ export default function FireCalendar({
                   onFocus={(event) => showTooltip(event, cellIndex)}
                   onMouseLeave={() => setTooltip(null)}
                   onBlur={() => setTooltip(null)}
+                  onClick={() => onSelectMonth?.(cell.year, cell.month)}
                   className={cn(
-                    "h-2.5 w-full rounded-[2px] transition duration-150 hover:brightness-150 focus:outline-none",
+                    "h-2.5 w-full cursor-pointer rounded-[2px] transition duration-150 hover:brightness-150 focus:outline-none",
                     selected &&
                       "ring-1 ring-cyan-200/90 ring-offset-1 ring-offset-slate-950",
                     cell.intensity > 0.8 &&
-                      "shadow-[0_0_6px_rgba(249,115,22,0.25)]",
+                      "shadow-[0_0_6px_rgba(254,232,56,0.3)]",
                   )}
                   style={{
                     backgroundColor: heatColor(cell.intensity, 0.92),
@@ -164,7 +167,7 @@ export default function FireCalendar({
         <span className="font-mono text-[7px] uppercase tracking-wider text-slate-600">
           Bajo
         </span>
-        <div className="h-1.5 flex-1 rounded-full bg-[linear-gradient(90deg,#0c1626,#0f2a3a,#78350f,#b45309,#ea580c,#ef4444,#fde047)]" />
+        <div className="h-1.5 flex-1 rounded-full bg-[linear-gradient(90deg,#0c1626,#1a3258,#2b547f,#537189,#8b8b73,#c2b05e,#fee838)]" />
         <span className="font-mono text-[7px] uppercase tracking-wider text-slate-600">
           Extremo
         </span>

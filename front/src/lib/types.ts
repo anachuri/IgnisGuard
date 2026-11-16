@@ -2,6 +2,9 @@ export type DateMode = "historical" | "live" | "forecast";
 
 export type LoadStatus = "idle" | "loading" | "success" | "error";
 
+/** Horizonte de predicción en días, anclado a la fecha de consulta. */
+export type ForecastHorizon = 7 | 15 | 30;
+
 export type RiskLevel = "Bajo" | "Moderado" | "Alto" | "Extremo";
 
 export type DrynessLevel = "Bajo" | "Moderado" | "Alto" | "Crítico";
@@ -80,4 +83,8 @@ export interface Prediction {
   confidence: number;
   seasonLabel: string;
   drivers: PredictionDriver[];
+  /** Fuente meteorológica cuando la estimación viene del backend. */
+  source?: string;
+  /** Identificador del modelo; "heuristic-v0" es la versión demostrativa. */
+  model?: string;
 }

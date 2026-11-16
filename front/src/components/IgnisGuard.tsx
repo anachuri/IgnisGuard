@@ -15,10 +15,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import GlobeView from "@/components/GlobeView";
 import SidebarDashboard from "@/components/SidebarDashboard";
 import Starfield from "@/components/Starfield";
-import type { OnThisDayRow, RefreshStatus } from "@/lib/api";
+import type {
+  FireDayRow,
+  FireDaySummary,
+  OnThisDayRow,
+  RefreshStatus,
+} from "@/lib/api";
 import {
   getCalendar,
+  getFireDays,
   getFires,
+  getForecast,
   getOnThisDay,
   getRefreshStatus,
   getRegions,
@@ -26,11 +33,25 @@ import {
   mergeApiRegions,
   startRefresh,
   toFireDataset,
+  toFireDaySummary,
   toFirePoints,
+  toPrediction,
 } from "@/lib/api";
-import { buildPrediction, getDateMode, todayIso } from "@/lib/fire-data";
+import {
+  addDaysIso,
+  buildPrediction,
+  getDateMode,
+  todayIso,
+} from "@/lib/fire-data";
 import { DEFAULT_LOCATION_ID, LOCATIONS } from "@/lib/locations";
-import type { FireDataset, FirePoint, LoadStatus, Location } from "@/lib/types";
+import type {
+  FireDataset,
+  FirePoint,
+  ForecastHorizon,
+  LoadStatus,
+  Location,
+  Prediction,
+} from "@/lib/types";
 import { cn, formatNumber } from "@/lib/utils";
 
 const CALENDAR_YEARS = 20;
@@ -130,6 +151,17 @@ function IgnisGuardDashboard({ today }: { today: string }) {
   const [firesError, setFiresError] = useState<string | null>(null);
   const [firesAttempt, setFiresAttempt] = useState(0);
   const [firePoints, setFirePoints] = useState<FirePoint[]>([]);
+  const [fireDay, setFireDay] = useState<FireDaySummary | null>(null);
+  // Si el día elegido no tuvo detecciones, sugiere el día pico del mes.
+  const [firesSuggestion, setFiresSuggestion] = useState<FireDayRow | null>(
+    null,
+  );
+
+  const [forecastHorizon, setForecastHorizon] = useState<ForecastHorizon>(7);
+
+  const [apiPrediction, setApiPrediction] = useState<Prediction | null>(null);
+  const [forecastError, setForecastError] = useState<string | null>(null);
+  const [forecastAttempt, setForecastAttempt] = useState(0);
 
   const [refresh, setRefresh] = useState<RefreshStatus>({
     running: false,
@@ -150,10 +182,16 @@ function IgnisGuardDashboard({ today }: { today: string }) {
   const mode = getDateMode(date, today);
   const apiMode = getDateMode(apiDate, today);
   const generating = firesStatus === "loading";
+  // La predicción se ancla a la fecha de consulta (hoy) + horizonte elegido.
+  const forecastTargetDate = addDaysIso(today, forecastHorizon);
 
   const prediction = useMemo(
-    () => (mode === "forecast" ? buildPrediction(location, date, today) : null),
-    [date, location, mode, today],
+    () =>
+      mode === "forecast"
+        ? (apiPrediction ??
+          buildPrediction(location, forecastTargetDate, today))
+        : null,
+    [apiPrediction, forecastTargetDate, location, mode, today],
   );
 
   const maxFrp = useMemo(
@@ -166,6 +204,29 @@ function IgnisGuardDashboard({ today }: { today: string }) {
     const timer = window.setTimeout(() => setApiDate(date), API_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [date]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: forecastAttempt fuerza el reintento manual
+  useEffect(() => {
+    if (mode !== "forecast") {
+      setApiPrediction(null);
+      setForecastError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setApiPrediction(null);
+    setForecastError(null);
+
+    getForecast(location, forecastTargetDate, controller.signal)
+      .then((forecast) => setApiPrediction(toPrediction(forecast)))
+      .catch((error: unknown) => {
+        if (isAbortError(error)) return;
+        setApiPrediction(null);
+        setForecastError("Meteomatics no disponible; usando estimación local.");
+      });
+
+    return () => controller.abort();
+  }, [forecastTargetDate, forecastAttempt, location, mode]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: regionsAttempt fuerza el reintento manual
   useEffect(() => {
@@ -213,7 +274,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       return;
     }
 
-    if (regionsStatus === "error" || !location.apiId) {
+    if (regionsStatus === "error") {
       setDataset(null);
       setCalendarStatus("error");
       setCalendarError(
@@ -226,12 +287,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
     setCalendarStatus("loading");
     setCalendarError(null);
 
-    getCalendar(
-      location.apiId,
-      calendarFromYear,
-      calendarToYear,
-      controller.signal,
-    )
+    getCalendar(location, calendarFromYear, calendarToYear, controller.signal)
       .then((rows) => {
         setDataset(toFireDataset(rows, calendarFromYear, calendarToYear));
         setCalendarStatus("success");
@@ -250,7 +306,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
     calendarAttempt,
     calendarFromYear,
     calendarToYear,
-    location.apiId,
+    location,
     regionsError,
     regionsStatus,
   ]);
@@ -262,7 +318,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       return;
     }
 
-    if (regionsStatus === "error" || !location.apiId) {
+    if (regionsStatus === "error") {
       setOnThisDayRows([]);
       setOnThisDayStatus("error");
       setOnThisDayError(
@@ -277,7 +333,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
     setOnThisDayStatus("loading");
     setOnThisDayError(null);
 
-    getOnThisDay(location.apiId, month, day, controller.signal)
+    getOnThisDay(location, month, day, controller.signal)
       .then((rows) => {
         setOnThisDayRows(rows);
         setOnThisDayStatus("success");
@@ -292,23 +348,22 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       });
 
     return () => controller.abort();
-  }, [apiDate, location.apiId, onThisDayAttempt, regionsError, regionsStatus]);
+  }, [apiDate, location, onThisDayAttempt, regionsError, regionsStatus]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: firesAttempt fuerza el reintento manual
   useEffect(() => {
-    if (!firesEnabled) {
-      setFiresStatus("idle");
-      setFiresError(null);
-      setFirePoints([]);
-      return;
-    }
-
     if (apiMode === "forecast") {
       setFirePoints([]);
-      setFiresStatus("error");
-      setFiresError(
-        "No hay detecciones para fechas futuras. Elegí una fecha histórica o de hoy.",
-      );
+      setFireDay(null);
+      if (firesEnabled) {
+        setFiresStatus("error");
+        setFiresError(
+          "No hay detecciones para fechas futuras. Elegí una fecha histórica o de hoy.",
+        );
+      } else {
+        setFiresStatus("idle");
+        setFiresError(null);
+      }
       return;
     }
 
@@ -317,8 +372,9 @@ function IgnisGuardDashboard({ today }: { today: string }) {
       return;
     }
 
-    if (regionsStatus === "error" || !location.apiId) {
+    if (regionsStatus === "error") {
       setFirePoints([]);
+      setFireDay(null);
       setFiresStatus("error");
       setFiresError(
         regionsError ?? "La región seleccionada no tiene id de FastAPI.",
@@ -330,15 +386,35 @@ function IgnisGuardDashboard({ today }: { today: string }) {
     setFiresStatus("loading");
     setFiresError(null);
     setFirePoints([]);
+    setFireDay(null);
 
-    getFires(location.apiId, apiDate, controller.signal)
+    getFires(location, apiDate, controller.signal)
       .then((response) => {
         setFirePoints(toFirePoints(response));
+        setFireDay(toFireDaySummary(response));
         setFiresStatus("success");
+
+        // El calendario agrega por mes: si el día exacto quedó vacío, busca
+        // el día con más celdas del mes para sugerirlo.
+        setFiresSuggestion(null);
+        if (response.count === 0) {
+          const year = Number(apiDate.slice(0, 4));
+          const month = Number(apiDate.slice(5, 7));
+          getFireDays(location, year, month)
+            .then((rows) => {
+              const peak = rows.reduce<FireDayRow | null>(
+                (best, row) => (!best || row.cells > best.cells ? row : best),
+                null,
+              );
+              setFiresSuggestion(peak);
+            })
+            .catch(() => setFiresSuggestion(null));
+        }
       })
       .catch((error: unknown) => {
         if (isAbortError(error)) return;
         setFirePoints([]);
+        setFireDay(null);
         setFiresStatus("error");
         setFiresError(
           "No se pudo consultar /api/fires. Verificá que FastAPI esté en línea.",
@@ -351,7 +427,7 @@ function IgnisGuardDashboard({ today }: { today: string }) {
     apiMode,
     firesAttempt,
     firesEnabled,
-    location.apiId,
+    location,
     regionsError,
     regionsStatus,
   ]);
@@ -377,10 +453,37 @@ function IgnisGuardDashboard({ today }: { today: string }) {
 
   const retryFires = () => setFiresAttempt((attempt) => attempt + 1);
 
-  const handleRefreshData = (start: string, end: string) => {
-    if (refresh.running || location.apiId == null) return;
+  // Click en una celda del calendario (año + mes): consulta los días con
+  // actividad de ese mes y salta al día pico para que aparezcan los focos.
+  const handleSelectMonth = (year: number, monthIndex: number) => {
+    const firstOfMonth = `${year}-${String(monthIndex + 1).padStart(2, "0")}-01`;
+    if (year > calendarToYear) return;
 
-    startRefresh({ region_id: location.apiId, start, end })
+    getFireDays(location, year, monthIndex + 1)
+      .then((rows) => {
+        const peak = rows.reduce<FireDayRow | null>(
+          (best, row) => (!best || row.cells > best.cells ? row : best),
+          null,
+        );
+        setDate(peak?.day ?? firstOfMonth);
+        setFiresEnabled(true);
+      })
+      .catch(() => {
+        setDate(firstOfMonth);
+        setFiresEnabled(true);
+      });
+  };
+
+  const handleRefreshData = (start: string, end: string) => {
+    if (refresh.running) return;
+
+    startRefresh({
+      region_id: location.apiId,
+      lat: location.apiId == null ? location.lat : undefined,
+      lon: location.apiId == null ? location.lon : undefined,
+      start,
+      end,
+    })
       .then(() =>
         setRefresh((current) => ({
           ...current,
@@ -589,6 +692,17 @@ function IgnisGuardDashboard({ today }: { today: string }) {
               {firePoints.length > 0
                 ? `${formatNumber(firePoints.length)} focos · FRP máx. ${Math.round(maxFrp)} MW`
                 : "Sin detecciones para esta fecha"}
+              {firePoints.length === 0 && firesSuggestion ? (
+                <button
+                  type="button"
+                  onClick={() => setDate(firesSuggestion.day)}
+                  className="pointer-events-auto ml-1 rounded border border-orange-300/30 px-1.5 py-0.5 text-[7px] tracking-[0.1em] text-orange-100/90 transition hover:bg-orange-400/10"
+                >
+                  Pico del mes: {firesSuggestion.day.slice(8, 10)}/
+                  {firesSuggestion.day.slice(5, 7)} ·{" "}
+                  {formatNumber(firesSuggestion.cells)} celdas
+                </button>
+              ) : null}
             </div>
           ) : (
             <div className="flex items-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.14em] text-slate-600">
@@ -651,13 +765,35 @@ function IgnisGuardDashboard({ today }: { today: string }) {
         onClose={() => setSidebarOpen(false)}
         location={location}
         locations={locations}
-        onLocationChange={(nextLocation) => setLocationId(nextLocation.id)}
+        onLocationChange={(nextLocation) => {
+          // Ubicaciones personalizadas (geocoding/coordenadas) se agregan a la
+          // lista; si ya existe el id se actualiza (p. ej. rename por reverse).
+          setLocations((current) =>
+            current.some((item) => item.id === nextLocation.id)
+              ? current.map((item) =>
+                  item.id === nextLocation.id ? nextLocation : item,
+                )
+              : [nextLocation, ...current],
+          );
+          setLocationId(nextLocation.id);
+        }}
         date={date}
         onDateChange={setDate}
         today={today}
         mode={mode}
         prediction={prediction}
+        predictionDate={forecastTargetDate}
+        forecastHorizon={forecastHorizon}
+        onForecastHorizonChange={setForecastHorizon}
+        forecastError={forecastError}
+        onRetryForecast={() => setForecastAttempt((attempt) => attempt + 1)}
+        dayFires={fireDay}
+        dayFiresStatus={firesStatus}
+        dayFiresError={firesError}
+        onRetryDayFires={retryFires}
         dataset={dataset}
+        onSelectMonth={handleSelectMonth}
+        firesSuggestion={firesSuggestion}
         calendarStatus={calendarStatus}
         calendarError={calendarError}
         onRetryCalendar={() => setCalendarAttempt((attempt) => attempt + 1)}

@@ -1,0 +1,165 @@
+  modis        2007: 78065 filas
+  modis        2008: 104699 filas
+  modis        2009: 82012 filas
+  modis        2010: 62709 filas
+  modis        2011: 76429 filas
+  modis        2012: 61883 filas
+  modis        2013: 66549 filas
+  modis        2014: 36816 filas
+  modis        2015: 45133 filas
+  modis        2016: 55402 filas
+  modis        2017: 60280 filas
+  modis        2018: 55399 filas
+  modis        2019: 50370 filas
+  modis        2020: 124094 filas
+  modis        2021: 56867 filas
+  modis        2022: 77521 filas
+  modis        2023: 47910 filas
+  modis        2024: 49843 filas
+  modis        2025: 48121 filas
+  viirs-snpp   2012: 189787 filas
+  viirs-snpp   2013: 237553 filas
+  viirs-snpp   2014: 126346 filas
+  viirs-snpp   2015: 151071 filas
+  viirs-snpp   2016: 181421 filas
+  viirs-snpp   2017: 201664 filas
+  viirs-snpp   2018: 184924 filas
+  viirs-snpp   2019: 161688 filas
+  viirs-snpp   2020: 448313 filas
+  viirs-snpp   2021: 198060 filas
+  viirs-snpp   2022: 312925 filas
+  viirs-snpp   2023: 171695 filas
+  viirs-snpp   2024: 152971 filas
+  viirs-snpp   2025: 170674 filas
+C:\Users\Usuario\Desktop\nasaApp\backend\etl\harmonize.py:11: DtypeWarning: Columns (8: instrument, 13: daynight) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(path, dtype={"acq_time": str, "version": str})
+C:\Users\Usuario\Desktop\nasaApp\backend\etl\harmonize.py:18: DtypeWarning: Columns (8: instrument, 13: daynight) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(path, dtype={"acq_time": str, "version": str})
+2734199 filas -> out/fire_cell_day.parquet
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1977, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 1192, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\cursors.py", line 170, in execute
+    result = self._query(query)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\cursors.py", line 335, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 591, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 867, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 1300, in read
+    first_packet = self.connection._read_packet()
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 820, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\err.py", line 154, in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+pymysql.err.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Desktop\nasaApp\backend\etl\load_mysql.py", line 28, in <module>
+    conn.execute(text("DELETE FROM fire_cell_day WHERE fecha BETWEEN :a AND :b"),
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                 {"a": dmin, "b": dmax})
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1494, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py", line 534, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1714, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<9 lines>...
+        param_dict=param_dict,
+    )
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1868, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1996, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 2351, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1977, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 1192, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\cursors.py", line 170, in execute
+    result = self._query(query)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\cursors.py", line 335, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 591, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 867, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 1300, in read
+    first_packet = self.connection._read_packet()
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 820, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\err.py", line 154, in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1205, 'Lock wait timeout exceeded; try restarting transaction')
+[SQL: DELETE FROM fire_cell_day WHERE fecha BETWEEN %(a)s AND %(b)s]
+[parameters: {'a': datetime.date(2006, 12, 31), 'b': datetime.date(2026, 11, 15)}]
+(Background on this error at: https://sqlalche.me/e/21/e3q8)
+data/modis.csv: +1240102 filas (merge+dedup)
+data/viirs.csv: +2889092 filas (merge+dedup)
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Desktop\nasaApp\backend\etl\backfill_archive.py", line 93, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Usuario\Desktop\nasaApp\backend\etl\backfill_archive.py", line 87, in main
+    subprocess.run([sys.executable, os.path.join(here, "load_mysql.py")],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   check=True, cwd=backend)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['C:\\Users\\Usuario\\AppData\\Local\\Programs\\Python\\Python313\\python.exe', 'C:\\Users\\Usuario\\Desktop\\nasaApp\\backend\\etl\\load_mysql.py']' returned non-zero exit status 1.

@@ -61,7 +61,7 @@ def save(df, path):
     if df.empty:
         return
     if os.path.exists(path):
-        old = pd.read_csv(path, dtype={"acq_time": str})
+        old = pd.read_csv(path, dtype={"acq_time": str, "version": str})
         df = pd.concat([old, df], ignore_index=True)
     if "collection" not in df.columns:
         df["collection"] = "SP"

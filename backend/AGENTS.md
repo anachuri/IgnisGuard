@@ -28,7 +28,7 @@ NASA Space Apps Challenge Córdoba: **armonización de detecciones de incendios 
 | `src/lib/fire-points.ts` (~l.43) | Focos simulados por hotspot | `GET /api/fires` |
 | `IgnisGuard.tsx` (~l.129) botón "Generar Puntos de Incendio" | `setTimeout` 1,5 s + 268 puntos simulados | Llamar `GET /api/fires` con región y fecha elegidas |
 | `fire-data.ts` (~l.118) modos historical/live/forecast | Según la fecha | **Se mantiene en el front** |
-| `fire-data.ts` (~l.158) predicción pseudo-XGBoost | Fórmula con ruido | **Dejar el mock por ahora** (el backend no tiene `/forecast` todavía) |
+| `fire-data.ts` (~l.158) predicción pseudo-XGBoost | Fórmula con ruido | **Usar `/forecast` con fallback al mock** (heurístico v0 + Meteomatics) |
 | `MetricsCard.tsx` | Métricas estáticas | **Dejar el mock por ahora** (no hay `/metrics`) |
 | `land-points.ts` | Continentes del globo | No tocar |
 
@@ -75,7 +75,7 @@ Sirve para una función "un día como hoy" (qué pasó ese mismo día en cada a�
 
 - **historical** (fecha pasada): calendario real + focos reales del día elegido vía `/fires`.
 - **live** (hoy): igual que historical con la fecha de hoy. Si no hay datos, mostrar estado vacío.
-- **forecast** (fecha futura): no pedir `/fires` (no hay datos futuros). Seguir mostrando `PredictionCard` con el mock actual, indicando visualmente que es una estimación.
+- **forecast** (fecha futura): no pedir `/fires` (no hay datos futuros). Pedir `GET /forecast?region={id}&date=YYYY-MM-DD` y mostrar `PredictionCard` con clima real de Meteomatics; si falla, usar el mock local como fallback.
 
 Hoy los focos no cambian con la fecha, solo con la ubicación. Con la API deben cambiar con **región y fecha**. Refetch cuando cambie cualquiera de las dos, con debounce corto en el selector de fecha y cancelando la petición anterior (`AbortController`) para evitar carreras.
 
@@ -87,7 +87,7 @@ Hoy los focos no cambian con la fecha, solo con la ubicación. Con la API deben 
 4. Calendario: reemplazar el generador de `fire-data.ts` por `/calendar` y completar meses vacíos con 0.
 5. Focos: conectar el botón "Generar Puntos de Incendio" a `/fires`; quitar el `setTimeout` y los 268 puntos simulados. Mostrar el estado de carga real en el botón.
 6. Agregar estados de carga y error (skeleton en el calendario, mensaje en el sidebar).
-7. Dejar métricas y predicción con mock, marcados con un comentario `// TODO: /metrics, /forecast`.
+7. Las métricas siguen con mock; la predicción ya usa `/forecast` con fallback al mock local.
 8. Verificar con `npm run build` y `npm run lint`.
 
 ## Cómo levantar el backend para probar

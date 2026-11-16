@@ -66,16 +66,18 @@ export function weekdayFromIso(isoDate: string): string {
   return weekday.charAt(0).toUpperCase() + weekday.slice(1);
 }
 
+// Rampa tipo cividis (azul marino -> dorado): luminancia monotónica y
+// legible con daltonismo, a diferencia de una escala rojo/verde.
 const HEAT_STOPS: ReadonlyArray<
   readonly [number, readonly [number, number, number]]
 > = [
   [0, [12, 22, 38]],
-  [0.12, [15, 42, 58]],
-  [0.3, [120, 53, 15]],
-  [0.52, [180, 83, 9]],
-  [0.72, [234, 88, 12]],
-  [0.88, [239, 68, 68]],
-  [1, [253, 224, 71]],
+  [0.14, [26, 50, 88]],
+  [0.34, [43, 84, 127]],
+  [0.54, [83, 113, 137]],
+  [0.72, [139, 139, 115]],
+  [0.87, [194, 176, 94]],
+  [1, [254, 232, 56]],
 ];
 
 export function heatColor(intensity: number, alpha = 1): string {

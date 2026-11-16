@@ -1,0 +1,140 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\Usuario\\Desktop\\nasaApp\\backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [20460] using WatchFiles
+INFO:     Started server process [15668]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:62671 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58095 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54058 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62641 - "GET /api/fires/daily?lat=-23.5&lon=-64.5&year=2020&month=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63856 - "GET /api/fires/daily?lat=-23.5&lon=-64.5&year=2020&month=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57897 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:52916 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49294 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56007 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61049 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61933 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61977 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49310 - "GET /api/regions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49326 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62247 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54545 - "GET /api/fires/daily?region=1&year=2020&month=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54561 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56090 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61982 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62088 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56296 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54626 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62920 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64841 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64198 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57089 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53415 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53454 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56815 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55144 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50975 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64990 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63563 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54715 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64309 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50820 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57407 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61031 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:52829 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49677 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56140 - "GET /api/regions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60171 - "GET /api/fires?region=1&day=2026-11-16 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60170 - "GET /api/on-this-day?region=1&month=11&day=16 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57024 - "GET /api/fires/daily?region=1&year=2026&month=11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60163 - "GET /api/calendar?region=1&from=2007&to=2026 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64099 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61307 - "GET /api/geocode?q=Jujuy&limit=6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62413 - "GET /api/geocode?q=rosario&limit=6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62425 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50211 - "GET /api/fires?lat=-32.9594&lon=-60.6617&day=2026-11-16 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50209 - "GET /api/calendar?lat=-32.9594&lon=-60.6617&from=2007&to=2026 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50210 - "GET /api/on-this-day?lat=-32.9594&lon=-60.6617&month=11&day=16 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58395 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:65306 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62910 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56682 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58388 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55216 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56660 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:65518 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61011 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50422 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49702 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58946 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56466 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64401 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64436 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51966 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56936 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61013 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59735 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57465 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50719 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59429 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61621 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56889 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61212 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63729 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63361 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60217 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64387 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58155 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56690 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56725 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55366 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55405 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55074 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61650 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62054 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62096 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49336 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49388 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59678 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53702 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59086 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56613 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:52987 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60369 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51598 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57847 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57888 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62459 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57776 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57809 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60110 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55109 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:65299 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59642 - "GET /api/fires/daily?lat=-23.5&lon=-64.5&year=2020&month=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65343 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62825 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62862 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53740 - "GET /api/fires?lat=-23.5&lon=-64.5&day=2020-10-12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53755 - "GET /api/fires/daily?lat=-23.5&lon=-64.5&year=2020&month=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53757 - "GET /api/calendar?lat=-23.5&lon=-64.5&from=2007&to=2026 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55763 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54646 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55528 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53498 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50665 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50702 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61318 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53215 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58609 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58645 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62761 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62797 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:52665 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59654 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:65106 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51370 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53838 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63867 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54791 - "GET /health HTTP/1.1" 404 Not Found

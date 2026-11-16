@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS fire_cell_day (
 );
 CREATE INDEX IF NOT EXISTS idx_fecha ON fire_cell_day (fecha);
 CREATE INDEX IF NOT EXISTS idx_region_fecha ON fire_cell_day (region_id, fecha);
+CREATE INDEX IF NOT EXISTS idx_geo ON fire_cell_day (lat, lon, fecha);
 
 CREATE TABLE IF NOT EXISTS region_day (
   region_id   SMALLINT NOT NULL,

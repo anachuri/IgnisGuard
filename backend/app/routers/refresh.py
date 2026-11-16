@@ -17,6 +17,8 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.geo import point_bbox
+
 BACKEND = Path(__file__).resolve().parents[2]
 ETL = BACKEND / "etl"
 sys.path.insert(0, str(ETL))
@@ -36,7 +38,9 @@ MAX_RANGE_DAYS = 366
 
 
 class RefreshRequest(BaseModel):
-    region_id: int
+    region_id: int | None = None
+    lat: float | None = None
+    lon: float | None = None
     start: dt.date
     end: dt.date
 
@@ -108,7 +112,19 @@ def refresh(req: RefreshRequest):
                    "para históricos usar etl/refresh.py",
         )
 
-    bbox = _region_bbox(req.region_id)  # 404 si la región no existe
+    if req.region_id is not None:
+        bbox = _region_bbox(req.region_id)  # 404 si la región no existe
+        request = {"region_id": req.region_id}
+    elif req.lat is not None and req.lon is not None:
+        bbox = point_bbox(req.lat, req.lon)
+        request = {"lat": req.lat, "lon": req.lon}
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="pasar `region_id` o el par `lat`/`lon`",
+        )
+    request["start"] = req.start.isoformat()
+    request["end"] = req.end.isoformat()
 
     if not _lock.acquire(blocking=False):
         raise HTTPException(status_code=409, detail="refresh ya en curso")
@@ -119,11 +135,7 @@ def refresh(req: RefreshRequest):
         finished_at=None,
         ok=None,
         detail="",
-        request={
-            "region_id": req.region_id,
-            "start": req.start.isoformat(),
-            "end": req.end.isoformat(),
-        },
+        request=request,
     )
     threading.Thread(
         target=_run,

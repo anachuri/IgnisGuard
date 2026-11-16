@@ -1,9 +1,24 @@
 "use client";
 
-import { ChevronDown, MapPin, Search, X } from "lucide-react";
+import {
+  ChevronDown,
+  Crosshair,
+  Globe2,
+  Loader2,
+  MapPin,
+  Search,
+  X,
+} from "lucide-react";
 import type { KeyboardEvent } from "react";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
+import type { GeocodeResult } from "@/lib/api";
+import {
+  geocode,
+  isAbortError,
+  reverseGeocode,
+  toCustomLocation,
+} from "@/lib/api";
 import type { Location } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +26,26 @@ interface LocationSearchProps {
   value: Location;
   locations: readonly Location[];
   onChange: (location: Location) => void;
+}
+
+type Item =
+  | { kind: "local"; location: Location }
+  | { kind: "geo"; result: GeocodeResult }
+  | { kind: "coords"; lat: number; lon: number };
+
+const GEOCODE_DEBOUNCE_MS = 350;
+
+function parseCoords(input: string): { lat: number; lon: number } | null {
+  const parts = input
+    .trim()
+    .split(/[\s,;]+/)
+    .filter(Boolean);
+  if (parts.length !== 2) return null;
+  const lat = Number(parts[0]);
+  const lon = Number(parts[1]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  return { lat, lon };
 }
 
 export default function LocationSearch({
@@ -22,8 +57,17 @@ export default function LocationSearch({
   const [query, setQuery] = useState(value.name);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [remote, setRemote] = useState<GeocodeResult[]>([]);
+  const [remoteStatus, setRemoteStatus] = useState<
+    "idle" | "loading" | "error"
+  >("idle");
 
   const normalizedQuery = query.trim().toLowerCase();
+  const coords = useMemo(() => parseCoords(query), [query]);
+
+  useEffect(() => {
+    setQuery(value.name);
+  }, [value.name]);
 
   const filtered = useMemo(() => {
     if (!normalizedQuery) return locations;
@@ -34,18 +78,115 @@ export default function LocationSearch({
     );
   }, [locations, normalizedQuery]);
 
-  const selectLocation = (location: Location) => {
-    onChange(location);
-    setQuery(location.name);
+  useEffect(() => {
+    if (!open || coords || normalizedQuery.length < 3) {
+      setRemote([]);
+      setRemoteStatus("idle");
+      return;
+    }
+
+    setRemoteStatus("loading");
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      geocode(query.trim(), controller.signal)
+        .then((results) => {
+          setRemote(results);
+          setRemoteStatus("idle");
+        })
+        .catch((error: unknown) => {
+          if (isAbortError(error)) return;
+          setRemote([]);
+          setRemoteStatus("error");
+        });
+    }, GEOCODE_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [open, query, normalizedQuery, coords]);
+
+  const items = useMemo<Item[]>(() => {
+    // Nominatim puede devolver duplicados con la misma coordenada: dedupe
+    // para que las keys del listbox sean únicas.
+    const seen = new Set<string>();
+    const geoItems = remote.filter((result) => {
+      const key = `${result.lat.toFixed(4)}|${result.lon.toFixed(4)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return [
+      ...filtered.map((location): Item => ({ kind: "local", location })),
+      ...geoItems.map((result): Item => ({ kind: "geo", result })),
+      ...(coords
+        ? [{ kind: "coords", lat: coords.lat, lon: coords.lon } as Item]
+        : []),
+    ];
+  }, [filtered, remote, coords]);
+
+  const itemId = (item: Item, index: number) => {
+    if (item.kind === "local") return item.location.id;
+    if (item.kind === "geo") return `geo-${index}`;
+    return "coords";
+  };
+
+  const close = () => {
     setOpen(false);
     setActiveIndex(0);
+  };
+
+  const selectLocal = (location: Location) => {
+    onChange(location);
+    setQuery(location.name);
+    close();
+  };
+
+  const selectGeo = (result: GeocodeResult) => {
+    const location = toCustomLocation({
+      name: result.name,
+      lat: result.lat,
+      lon: result.lon,
+      country: result.country,
+    });
+    onChange(location);
+    setQuery(location.name);
+    close();
+  };
+
+  const selectCoords = (lat: number, lon: number) => {
+    const label = `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+    onChange(toCustomLocation({ name: label, lat, lon }));
+    setQuery(label);
+    close();
+    reverseGeocode(lat, lon)
+      .then((result) => {
+        if (result?.name) {
+          onChange(
+            toCustomLocation({
+              name: result.name,
+              lat,
+              lon,
+              country: result.country,
+            }),
+          );
+        }
+      })
+      .catch(() => {});
+  };
+
+  const selectItem = (item: Item) => {
+    if (item.kind === "local") selectLocal(item.location);
+    else if (item.kind === "geo") selectGeo(item.result);
+    else selectCoords(item.lat, item.lon);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
       event.preventDefault();
       if (!open) setOpen(true);
-      setActiveIndex((index) => Math.min(index + 1, filtered.length - 1));
+      setActiveIndex((index) => Math.min(index + 1, items.length - 1));
       return;
     }
 
@@ -56,9 +197,9 @@ export default function LocationSearch({
     }
 
     if (event.key === "Enter") {
-      if (open && filtered[activeIndex]) {
+      if (open && items[activeIndex]) {
         event.preventDefault();
-        selectLocation(filtered[activeIndex]);
+        selectItem(items[activeIndex]);
       }
       return;
     }
@@ -69,6 +210,8 @@ export default function LocationSearch({
       setActiveIndex(0);
     }
   };
+
+  const firstGeoIndex = filtered.length;
 
   return (
     <div className="relative">
@@ -82,11 +225,11 @@ export default function LocationSearch({
           aria-controls={listboxId}
           aria-autocomplete="list"
           aria-activedescendant={
-            open && filtered[activeIndex]
-              ? `${listboxId}-${filtered[activeIndex].id}`
+            open && items[activeIndex]
+              ? `${listboxId}-${itemId(items[activeIndex], activeIndex)}`
               : undefined
           }
-          placeholder="Buscar ciudad o región…"
+          placeholder="Nombre o lat, lon (cualquier lugar)…"
           autoComplete="off"
           spellCheck={false}
           onFocus={() => setOpen(true)}
@@ -138,16 +281,95 @@ export default function LocationSearch({
           <div
             id={listboxId}
             role="listbox"
-            aria-label="Regiones disponibles"
+            aria-label="Ubicaciones disponibles"
             className="scrollbar-slim max-h-64 overflow-y-auto p-1.5"
           >
-            {filtered.length === 0 ? (
+            {items.length === 0 ? (
               <p className="px-3 py-4 text-xs leading-relaxed text-slate-500">
-                Sin coincidencias en la base regional. Probá con Córdoba, Salta
-                o Jujuy.
+                {remoteStatus === "loading"
+                  ? "Buscando en el mapa global…"
+                  : "Sin coincidencias. Probá con un nombre o con lat, lon."}
               </p>
             ) : (
-              filtered.map((location, index) => {
+              items.map((item, index) => {
+                if (item.kind === "geo") {
+                  const showHeader = index === firstGeoIndex;
+                  return (
+                    <div key={itemId(item, index)}>
+                      {showHeader ? (
+                        <div className="mt-1 border-t border-white/5 px-3 pb-1 pt-2 font-mono text-[8px] uppercase tracking-[0.2em] text-slate-600">
+                          Resultados globales
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        id={`${listboxId}-${itemId(item, index)}`}
+                        role="option"
+                        aria-selected={false}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onMouseEnter={() => setActiveIndex(index)}
+                        onClick={() => selectItem(item)}
+                        className={cn(
+                          "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition",
+                          index === activeIndex
+                            ? "bg-cyan-400/10"
+                            : "hover:bg-white/5",
+                        )}
+                      >
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03] text-slate-500">
+                          <Globe2 className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="truncate text-xs font-medium text-slate-200">
+                            {item.result.name}
+                          </span>
+                          <span className="mt-0.5 block truncate font-mono text-[8px] tracking-[0.06em] text-slate-500">
+                            {item.result.display}
+                          </span>
+                        </span>
+                        <span className="shrink-0 font-mono text-[8px] tabular-nums text-slate-600">
+                          {item.result.lat.toFixed(1)},{" "}
+                          {item.result.lon.toFixed(1)}
+                        </span>
+                      </button>
+                    </div>
+                  );
+                }
+
+                if (item.kind === "coords") {
+                  return (
+                    <button
+                      key={itemId(item, index)}
+                      type="button"
+                      id={`${listboxId}-${itemId(item, index)}`}
+                      role="option"
+                      aria-selected={false}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onMouseEnter={() => setActiveIndex(index)}
+                      onClick={() => selectItem(item)}
+                      className={cn(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition",
+                        index === activeIndex
+                          ? "bg-cyan-400/10"
+                          : "hover:bg-white/5",
+                      )}
+                    >
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 text-cyan-300">
+                        <Crosshair className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="truncate text-xs font-medium text-slate-200">
+                          Ir a {item.lat.toFixed(3)}, {item.lon.toFixed(3)}
+                        </span>
+                        <span className="mt-0.5 block truncate font-mono text-[8px] uppercase tracking-[0.12em] text-slate-500">
+                          Coordenadas exactas
+                        </span>
+                      </span>
+                    </button>
+                  );
+                }
+
+                const location = item.location;
                 const active = location.id === value.id;
                 return (
                   <button
@@ -158,7 +380,7 @@ export default function LocationSearch({
                     aria-selected={active}
                     onMouseDown={(event) => event.preventDefault()}
                     onMouseEnter={() => setActiveIndex(index)}
-                    onClick={() => selectLocation(location)}
+                    onClick={() => selectItem(item)}
                     className={cn(
                       "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition",
                       index === activeIndex
@@ -198,6 +420,13 @@ export default function LocationSearch({
                 );
               })
             )}
+
+            {remoteStatus === "loading" && items.length > 0 ? (
+              <div className="flex items-center gap-1.5 px-3 py-2 font-mono text-[8px] uppercase tracking-[0.14em] text-slate-600">
+                <Loader2 className="h-3 w-3 animate-spin text-cyan-300/60" />
+                Buscando en el mapa global…
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
