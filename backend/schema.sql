@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS fire_cell_day (
   region_id   TINYINT,
   PRIMARY KEY (cell, fecha),
   KEY idx_fecha (fecha),
-  KEY idx_region_fecha (region_id, fecha)
+  KEY idx_region_fecha (region_id, fecha),
+  KEY idx_geo (lat, lon, fecha)
 );
 
 CREATE TABLE IF NOT EXISTS region_day (

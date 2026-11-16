@@ -1,6 +1,6 @@
 # IgnisGuard backend (FastAPI + MySQL + H3)
 
-1. `cp .env.example .env` y completar `FIRMS_MAP_KEY` (y `DATABASE_URL` si difiere del default).
+1. `cp .env.example .env` y completar `FIRMS_MAP_KEY`, `METEOMATICS_USERNAME` y `METEOMATICS_PASSWORD` (y `DATABASE_URL` si difiere del default).
 2. `sudo docker compose up -d mysql` (publica MySQL en `localhost:3307`; el `-sudo` es por el permiso del socket de Docker).
 3. `pip install -r requirements.txt`
 4. `python etl/build_regions.py` → genera `data/regiones.geojson` (límites provinciales → 7 regiones).
@@ -10,6 +10,12 @@
    - SP (consolidado) hasta hace ~10 días; NRT (VIIRS SNPP/NOAA-20/NOAA-21 + MODIS) para los días recientes.
    - Al final corre `harmonize.py` + `load_mysql.py` automáticamente (`--skip-load` para saltearlo).
 7. `uvicorn app.main:app --reload` -> http://localhost:8000/docs
+
+## Clima y pronóstico (Meteomatics)
+
+- `GET /api/weather?region=3&date=2026-11-20` devuelve temperatura, humedad, viento y precipitación reales para el centroide de la región.
+- `GET /api/forecast?region=3&date=2026-11-20` devuelve una probabilidad de incendio y los drivers meteorológicos. Es un modelo heurístico transparente (`heuristic-v0`), no un XGBoost entrenado; el front lo usa para la tarjeta de fechas futuras y cae al mock local si Meteomatics no responde.
+- Las credenciales se leen de `.env`; nunca se exponen al navegador.
 
 ## Refresh incremental (cron)
 

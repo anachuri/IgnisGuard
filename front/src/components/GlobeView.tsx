@@ -56,6 +56,8 @@ export default function GlobeView({
   const draggingRef = useRef(false);
   const pointerRef = useRef({ x: 0, y: 0 });
   const resumeAtRef = useRef(0);
+  const autoRotateRef = useRef(true);
+  const locationIdRef = useRef(location.id);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -107,6 +109,14 @@ export default function GlobeView({
       lonRad: location.lon * DEG,
     };
 
+    // Al elegir un lugar nuevo el globo se centra en el punto y frena la
+    // rotación automática; el usuario igual puede arrastrarlo o usar flechas.
+    if (locationIdRef.current !== location.id) {
+      locationIdRef.current = location.id;
+      rotationRef.current = ((-locationDot.lonRad % TAU) + TAU) % TAU;
+      autoRotateRef.current = false;
+    }
+
     const glowSprite = createGlowSprite();
     const firesStart = performance.now();
 
@@ -157,7 +167,12 @@ export default function GlobeView({
       const delta = Math.min(64, now - lastFrame);
       lastFrame = now;
 
-      if (!reducedMotion && !draggingRef.current && now > resumeAtRef.current) {
+      if (
+        !reducedMotion &&
+        autoRotateRef.current &&
+        !draggingRef.current &&
+        now > resumeAtRef.current
+      ) {
         rotationRef.current += delta * 0.00008;
       }
 

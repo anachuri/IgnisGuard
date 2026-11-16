@@ -8,14 +8,14 @@ PARQUET_COLS = ["cell", "fecha", "n_modis", "n_viirs", "frp_max", "frp_sum",
                 "agreement", "lat", "lon", "region_id"]
 
 def load_modis(path):
-    df = pd.read_csv(path, dtype={"acq_time": str})
+    df = pd.read_csv(path, dtype={"acq_time": str, "version": str})
     df["sensor"] = "MODIS"
     df["conf_cat"] = pd.cut(df["confidence"], [-1, 29, 79, 100],
                             labels=["l", "n", "h"]).astype(str)
     return df
 
 def load_viirs(path):
-    df = pd.read_csv(path, dtype={"acq_time": str})
+    df = pd.read_csv(path, dtype={"acq_time": str, "version": str})
     df["sensor"] = "VIIRS"
     df["conf_cat"] = df["confidence"].astype(str).str.lower().str[0]
     return df
@@ -105,9 +105,9 @@ if __name__ == "__main__":
         agg = assign_region(agg, "data/regiones.geojson")
     else:
         agg["region_id"] = np.nan
-    agg = agg.dropna(subset=["region_id"])
-    if not agg.empty:
-        agg["region_id"] = agg["region_id"].astype(int)
+    # Se conservan las celdas fuera de las regiones precargadas (region_id
+    # NULL): las consultas por lat/lon las usan para ubicaciones arbitrarias.
+    agg["region_id"] = agg["region_id"].astype("Int64")
 
     os.makedirs("out", exist_ok=True)
     agg[PARQUET_COLS].to_parquet("out/fire_cell_day.parquet")
