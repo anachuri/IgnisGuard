@@ -16,6 +16,9 @@ if df.empty:
     print("parquet vacío, nada que cargar")
     sys.exit(0)
 
+# Postgres BOOLEAN no acepta enteros; pandas manda agreement como int64.
+df["agreement"] = df["agreement"].astype(bool)
+
 # Idempotente y atómico: borra el rango de fechas del parquet y lo reinserta
 # en una sola transacción (los GET de la API nunca ven datos a medias).
 dmin, dmax = df["fecha"].min(), df["fecha"].max()
